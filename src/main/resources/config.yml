@@ -1,0 +1,23 @@
+discord:
+  token: ""
+  webhook: ""
+  whitelist_channel: ""
+  whitelist_category: ""
+  role: ""
+mongodb:
+  url: ""
+  database: "minecraft"
+
+claim:
+  max-claims: 5
+
+chunk:
+  entity:
+    limit: 50
+
+end-disabled: true
+endgateway-disabled: true
+messages: "messages_en.yml"
+rules: ["Rule 1","Rule 2","Rule 3","Rule 4"]
+introduction: ["Page 1","Page 2","Page 3","Page 4"]
+introduction-title: "Introduction"

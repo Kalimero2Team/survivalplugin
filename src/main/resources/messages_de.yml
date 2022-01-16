@@ -1,0 +1,59 @@
+message:
+  command:
+    chunk:
+      info: X:<chunk_x> Z:<chunk_z>
+      team_chunk: 'Besitzer: <dark_aqua>Team</dark_aqua>'
+      claimed_true: 'Beansprucht: <green>Ja</green>'
+      claimed_false: 'Beansprucht: <red>Nein</red>'
+      claim_owner: 'Besitzer: <player>'
+      claim_trusted_start: 'Vertraute Spieler:'
+      claim_trusted_player: ' <player>'
+      claim_add_success: '<green>Erfolg</green> <gray><player></gray> kann nun auf
+        diesem Chunk bauen'
+      claim_add_fail_already_added: '<red>Fehlschlag</red> <gray><player></gray> konnte
+        bereits auf diesem Chunk bauen'
+      claim_add_fail_not_claimed: <red>Fehlschlag</red> Dieser Chunk hat keinen Besitzer
+      claim_remove_success: <green>Erfolg</green> <gray><player></gray> kann nun nicht
+        mehr auf diesem Chunk bauen
+      claim_remove_fail_already_removed: <red>Fehlschlag</red> <gray><player></gray>
+        war bereits nicht berechtigt auf diesem Chunk zu bauen
+      claim_remove_fail_not_claimed: <red>Fehlschlag</red> Dieser Chunk hat keinen
+        Besitzer
+      claim_fail_owner: <red>Fehlschlag</red> Du bist nicht der Besitzer von diesem
+        Chunk
+      claim_success: <green>Erfolg</green> Beanspruchung erfolgreich
+      claim_fail_already_claimed: <red>Fehlschlag</red> Dieser Chunk ist schon beansprucht
+      claim_fail_too_many_claims: <red>Fehlschlag</red> Du hast bereits <count> von
+        <max_count> maximalen Chunks beansprucht.
+      unclaim_success: <green>Erfolg</green> Anspruch erfolgreich entfernt
+      unclaim_force_success: <green>Erfolg</green> Anspruch erfolgreich beseitigt
+      unclaim_fail_team_claim: <red>Fehlschlag</red> Dieser Chunk ist vom <aqua>Team</aqua>
+        beansprucht
+      unclaim_fail_not_claimed: <red>Fehlschlag</red> Dieser Chunk ist nicht beansprucht
+      border_on: Die Chunkgrenzen sind nun <green>sichtbar</green>
+      border_off: Die Chunkgrenzen sind nun <red>nicht mehr sichtbar</red>
+      force_on: 'Forced-Modus: <green>Aktiviert</green>'
+      force_off: 'Forced-Modus: <red>Deaktiviert</red>'
+    discord:
+      info: 'Discord Name: <gray><hover:show_text:"ID: <discord_id>"><discord_name></gray>'
+  discord:
+    rules_message: Um auf den Server joinen zu können musst die Folgenden Regelen
+      akzeptieren
+    rules_accepted: Du hast die Regeln akzeptiert. Du kannst jetzt auf den Server
+      joinen
+    rules_denied: Du hast die Regelen abgelehnt
+    quit: Du wurdest von der Whitelist entfernt, da du den Discord Server verlassen
+      hast
+    whitelist_add_channel: Um auf diesem Server spielen zu können, sprich um dich auf die
+      Whitelist zu setzen, klicke auf „Zur Whitelist hinzufügen“ und befolge die weiteren
+      Schritte in dem für dich erstellten Kanal.
+    whitelist_code_channel: Sende den dir beim Beitreten des Servers angezeigten Code in diesen Channel.
+    max_bedrock: ' Du kannst keine weiteren Bedrock Accounts verknüpfen'
+    max_java: ' Du kannst keine weiteren Java Accounts verknüpfen'
+    accept: Akzeptieren
+    deny: Ablehnen
+    cancel: Abbrechen
+    add: Zur Whitelist hinzufügen
+  join:
+    fail_whitelist: Du bist nicht auf der Whitelist :( Dein Code lautet <bold><code></bold>.
+    fail_rules_not_accepted: Du musst die Regeln akzeptieren um die Berechtigung zu haben auf den Server zu joinen
