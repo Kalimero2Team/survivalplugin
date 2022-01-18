@@ -8,8 +8,8 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
-group = "me.byquanton.survivalplugin"
-version = "1.0-SNAPSHOT"
+group = "com.kalimero2.team.survivalplugin"
+version = "2.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -24,7 +24,6 @@ dependencies {
     bukkitLibrary("club.minnced","discord-webhooks","0.7.4")
     paperDevBundle("1.18.1-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
-    /*compileOnly "com.mojang","brigadier","1.0.17"*/
     implementation("net.kyori","adventure-text-minimessage","4.1.0-SNAPSHOT")
     implementation("org.mongodb","mongodb-driver-sync","4.4.0")
     implementation("org.javacord","javacord","3.3.2")
@@ -37,10 +36,10 @@ java {
 }
 
 bukkit {
-    main = "me.byquanton.survivalplugin.SurvivalPlugin"
+    main = "com.kalimero2.team.survivalplugin.SurvivalPlugin"
     apiVersion = "1.18"
     load = BukkitPluginDescription.PluginLoadOrder.STARTUP
-    author = "byquanton"
+    authors = listOf("byquanton")
     depend = listOf("floodgate")
 }
 
@@ -50,7 +49,7 @@ tasks {
     }
 
     shadowJar {
-        fun reloc(pkg: String) = relocate(pkg, "me.byquanton.survivalplugin.dependency.$pkg")
+        fun reloc(pkg: String) = relocate(pkg, "com.kalimero2.team.survivalplugin.dependency.$pkg")
 
         reloc("org.mongodb")
         reloc("cloud.commandframework")
