@@ -31,24 +31,24 @@ public class AdminCommand extends Command{
 
     @Override
     public void register() {
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("reload").permission("admin").handler(this::reload));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("database").literal("reload").permission("admin").handler(this::reloadDatabase));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("database").literal("purge").argument(OfflinePlayerArgument.of("player")).permission("admin").handler(this::purgeDatabase));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("alts").argument(OfflinePlayerArgument.of("player")).permission("admin").handler(this::alts));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("tab").literal("header").argument(StringArgument.greedy("header")).permission("admin").handler(this::header));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("tab").literal("footer").argument(StringArgument.greedy("footer")).permission("admin").handler(this::footer));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("claims").argument(OfflinePlayerArgument.of("player")).permission("admin").handler(this::extraPlayerData));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("unclaim-all").argument(OfflinePlayerArgument.of("player")).permission("admin").handler(this::unClaimAll));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("chunk").literal("claim").argument(StringArgument.greedy("message")).permission("admin").handler(this::claim));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("chunk").literal("unclaim").permission("admin").handler(this::unClaim));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("set-max-claims").argument(OfflinePlayerArgument.of("player")).argument(IntegerArgument.of("claims")).permission("admin").handler(this::setMaxClaims));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("tpchunk").argument(Location2DArgument.of("location")).permission("admin").handler(this::teleportChunk));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("portal").literal("end").argument(BooleanArgument.of("bool")).permission("admin").handler(this::setEnableEndPortal));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("portal").literal("end-gateway").argument(BooleanArgument.of("bool")).permission("admin").handler(this::setEnableEndGateway));;
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("portal").literal("nether").argument(BooleanArgument.of("bool")).permission("admin").handler(this::setEnableNetherPortal));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("max-players").argument(IntegerArgument.of("amount")).permission("admin").handler(this::setMaxPlayers));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("maintenance").literal("on").argument(StringArgument.greedy("text")).permission("admin").handler(this::maintenanceOn));
-        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("maintenance").literal("off").permission("admin").handler(this::maintenanceOff));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("reload").permission("survivalplugin.admin.reload").handler(this::reload));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("database").literal("reload").permission("survivalplugin.admin.database.reload").handler(this::reloadDatabase));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("database").literal("purge").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.database.purge").handler(this::purgeDatabase));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("alts").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.alts").handler(this::alts));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("tab").literal("header").argument(StringArgument.greedy("header")).permission("survivalplugin.admin.tab.header").handler(this::header));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("tab").literal("footer").argument(StringArgument.greedy("footer")).permission("survivalplugin.admin.tab.footer").handler(this::footer));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("claims").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.claims").handler(this::extraPlayerData));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("unclaim-all").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.unclaim-all").handler(this::unClaimAll));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("chunk").literal("claim").argument(StringArgument.greedy("message")).permission("survivalplugin.admin.claim").handler(this::claim));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("chunk").literal("unclaim").permission("survivalplugin.admin.unclaim").handler(this::unClaim));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("set-max-claims").argument(OfflinePlayerArgument.of("player")).argument(IntegerArgument.of("claims")).permission("survivalplugin.admin.set-max-claims").handler(this::setMaxClaims));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("tpchunk").argument(Location2DArgument.of("location")).permission("survivalplugin.admin.tpchunk").handler(this::teleportChunk));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("portal").literal("end").argument(BooleanArgument.of("bool")).permission("survivalplugin.admin.portal.end").handler(this::setEnableEndPortal));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("portal").literal("end-gateway").argument(BooleanArgument.of("bool")).permission("survivalplugin.admin.portal.end-gateway").handler(this::setEnableEndGateway));;
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("portal").literal("nether").argument(BooleanArgument.of("bool")).permission("survivalplugin.admin.portal.nether").handler(this::setEnableNetherPortal));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("max-players").argument(IntegerArgument.of("amount")).permission("survivalplugin.admin.max-players").handler(this::setMaxPlayers));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("maintenance").literal("on").argument(StringArgument.greedy("text")).permission("survivalplugin.admin.maintenance").handler(this::maintenanceOn));
+        this.commandManager.command(this.commandManager.commandBuilder("admin").literal("maintenance").literal("off").permission("survivalplugin.admin.maintenance").handler(this::maintenanceOff));
     }
 
     private void reload(CommandContext<CommandSender> context){
