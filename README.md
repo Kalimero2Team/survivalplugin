@@ -6,6 +6,15 @@
 - Discord Whitelist Bot
 - An Introduction Command
 
+## How To compile Jar from Source
+
+You need JDK 17 and an internet connection
+```
+git clone https://github.com/Kalimero2Team/survivalplugin
+
+./gradlew build
+```
+
 ## Commands:
 
 
