@@ -22,7 +22,7 @@ public final class SurvivalPlugin extends JavaPlugin {
 
     private MongoDB database;
     private DiscordBot discordBot;
-    private DiscordConsole discordConsole;
+    private LogDiscordAppender logDiscordAppender;
     public boolean chatMute;
     public Component maintenance;
     public FloodgateApi floodgateApi;
@@ -49,19 +49,24 @@ public final class SurvivalPlugin extends JavaPlugin {
             playerDataFolder.mkdirs();
         }
 
-        this.database = new MongoDB(plugin.getConfig().getString("mongodb.url"),plugin.getConfig().getString("mongodb.database"));
+        try{
+            this.database = new MongoDB(plugin.getConfig().getString("mongodb.url"),plugin.getConfig().getString("mongodb.database"));
+        }catch (IllegalArgumentException exception){
+            exception.printStackTrace();
+        }
 
         try {
             this.discordBot = new DiscordBot(plugin.getConfig().getString("discord.token"), plugin);
-        } catch (LoginException e) {
-            e.printStackTrace();
+        } catch (LoginException exception) {
+            exception.printStackTrace();
         }
 
-        floodgateApi = FloodgateApi.getInstance();
     }
 
     @Override
     public void onEnable() {
+        floodgateApi = FloodgateApi.getInstance();
+
         motd = this.getServer().motd();
 
         claimManager = new ClaimManager(plugin);
@@ -85,16 +90,19 @@ public final class SurvivalPlugin extends JavaPlugin {
         }
 
 
-        discordConsole = new DiscordConsole(plugin.getConfig().getString("discord.webhook"));
-        discordConsole.sendUpdateEmbed("Server Status Update","Server Starting");
-        plugin.getLogger().info("Started Discord Console Relay");
+        logDiscordAppender = new LogDiscordAppender(plugin.getConfig().getString("discord.webhook"));
+        if(logDiscordAppender.connect()){
+            logDiscordAppender.sendUpdateEmbed("Server Status Update","Server Starting");
+            plugin.getLogger().info("Enabled Discord Log Appender");
+        }else {
+            plugin.getLogger().warning("Discord Log Appender failed to load");
+        }
 
     }
 
     @Override
     public void onDisable() {
-        discordConsole.sendUpdateEmbed("Server Status Update","Server Stopping");
-        discordBot.discordApi.disconnect();
+        logDiscordAppender.sendUpdateEmbed("Server Status Update","Server Stopping");
     }
 
 

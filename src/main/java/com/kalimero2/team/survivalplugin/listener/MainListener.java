@@ -69,8 +69,10 @@ public class MainListener implements Listener {
 
         Component joinmessage = Component.text("[+] ").color(NamedTextColor.GREEN).append(Component.text(player.getName()).color(NamedTextColor.WHITE));
 
-        if(plugin.floodgateApi.isFloodgatePlayer(player.getUniqueId())){
-            joinmessage = joinmessage.append(Component.text(" (Bedrock)").color(NamedTextColor.GRAY));
+        if(plugin.getServer().getPluginManager().isPluginEnabled("floodgate")){
+            if(plugin.floodgateApi.isFloodgatePlayer(player.getUniqueId())){
+                joinmessage = joinmessage.append(Component.text(" (Bedrock)").color(NamedTextColor.GRAY));
+            }
         }
 
         event.joinMessage(joinmessage);
