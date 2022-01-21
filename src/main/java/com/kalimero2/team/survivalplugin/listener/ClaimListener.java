@@ -227,10 +227,10 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onBlocksPlace(BlockMultiPlaceEvent placeEvent) {
         Player player = placeEvent.getPlayer();
-        Block block = placeEvent.getBlock();
-
-        if(shouldcancel(block.getChunk(), player)){
-            placeEvent.setCancelled(true);
+        for(BlockState blockState:placeEvent.getReplacedBlockStates()){
+            if(shouldcancel(blockState.getChunk(), player)){
+                placeEvent.setCancelled(true);
+            }
         }
     }
 
