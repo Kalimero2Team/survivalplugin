@@ -2,7 +2,6 @@ import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
     `java-library`
-    id("io.papermc.paperweight.userdev") version "1.3.3"
     id("xyz.jpenilla.run-paper") version "1.0.6"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.1"
     id("com.github.johnrengelman.shadow") version "7.1.0"
@@ -13,6 +12,7 @@ version = "2.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://repo.opencollab.dev/maven-snapshots/")
     maven("https://hub.jeff-media.com/nexus/repository/jeff-media-public/")
 }
@@ -22,7 +22,7 @@ dependencies {
     bukkitLibrary("commons-io","commons-io","2.11.0")
     bukkitLibrary("org.apache.logging.log4j","log4j-core","2.17.0")
     bukkitLibrary("club.minnced","discord-webhooks","0.7.4")
-    paperDevBundle("1.18.1-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper","paper-api","1.18.1-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
     implementation("net.kyori","adventure-text-minimessage","4.1.0-SNAPSHOT")
     implementation("org.mongodb","mongodb-driver-sync","4.4.0")
@@ -43,10 +43,9 @@ bukkit {
     depend = listOf("floodgate")
 }
 
+
+
 tasks {
-    assemble {
-        dependsOn(reobfJar)
-    }
 
     shadowJar {
         fun reloc(pkg: String) = relocate(pkg, "com.kalimero2.team.survivalplugin.dependency.$pkg")
@@ -55,9 +54,12 @@ tasks {
         reloc("cloud.commandframework")
         reloc("io.leangen.geantyref")
         reloc("de.jeff_media.morepersistentdatatypes")
+
+        archiveFileName.set("SurvivalPlugin.jar")
     }
 
-    reobfJar {
-        outputJar.set(layout.buildDirectory.file("libs/SurvivalPlugin.jar"))
+    jar{
+
+        dependsOn(shadowJar)
     }
 }
