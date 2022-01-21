@@ -136,6 +136,7 @@ public class ClaimListener implements Listener {
         }
     }
 
+    @EventHandler
     private void onEntityDamageByPlayer(EntityDamageByEntityEvent event, Player player) {
         if(event.getEntity() instanceof Player || event.getEntity() instanceof Monster){
             event.setCancelled(false);
