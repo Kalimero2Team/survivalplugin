@@ -9,6 +9,7 @@
 ## How to compile Jar from Source
 
 You need JDK 17 and an internet connection
+
 ```
 git clone https://github.com/Kalimero2Team/survivalplugin
 
@@ -16,8 +17,6 @@ git clone https://github.com/Kalimero2Team/survivalplugin
 ```
 
 ## Commands:
-
-
 
 | Command                                | Description                                                                     | Permission                              | Alias                            |
 | -------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------- | -------------------------------- |
@@ -57,5 +56,11 @@ git clone https://github.com/Kalimero2Team/survivalplugin
 | /mute global                           | Mutes/Unmutes the global Chat                                                   | survivalplugin.mute.global              |                                  |
 | **/spawn**                             |                                                                                 |                                         |                                  |
 | /spawn                                 | Teleports you to the World Spawn (only in Overworld)                            |                                         |                                  |
+| **/bed**                               |                                                                                 |                                         |                                  |
+| /bed                                   | Teleports you to your Bed Spawn Point                                           |                                         |                                  |
+| **/craftingtable**                     |                                                                                 |                                         |                                  |
+| /craftingtable                         | Opens the Crafting Table Inventory (Unlocks after Crafting the Item)            |                                         | /ct                              |
+| **/enderchest**                        |                                                                                 |                                         |                                  |
+| /enderchest                            | Opens the Ender Chest Inventory (Unlocks after Crafting the Item)               |                                         | /ec                              |
 
 
