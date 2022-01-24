@@ -59,7 +59,10 @@ tasks {
     }
 
     jar{
-
         dependsOn(shadowJar)
+    }
+
+    runServer{
+        minecraftVersion.set("1.18.1")
     }
 }
