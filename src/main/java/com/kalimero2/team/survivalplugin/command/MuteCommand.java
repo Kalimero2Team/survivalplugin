@@ -17,7 +17,7 @@ public class MuteCommand extends Command{
 
     @Override
     public void register() {
-        this.commandManager.command(this.commandManager.commandBuilder("mute").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.mute").handler(this::mute));
+        this.commandManager.command(this.commandManager.commandBuilder("mute").argument(OfflinePlayerArgument.of("player")).permission("commandManager").handler(this::mute));
         this.commandManager.command(this.commandManager.commandBuilder("mute").literal("global").permission("admin").handler(this::muteGlobal));
     }
 

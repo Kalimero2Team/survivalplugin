@@ -28,6 +28,10 @@ message:
       force_off: 'Force-Modus: <red>deaktiviert</red>'
     discord:
       info: 'Erreichbar über Discord unter: <bold><discord_name></bold>'
+    enderchest:
+      fail_never_crafted: "Du hast bis jetzt noch keine Ender Chest hergestellt"
+    craftingtable:
+      fail_never_crafted: "Du hast bis jetzt noch keinen Crafting Table hergestellt"
   discord:
     rules_message: 'Um den Server beitreten zu können, musst du folgende Regelen akzeptieren:'
     rules_accepted: 'Du kannst nun auf den Server joinen.'

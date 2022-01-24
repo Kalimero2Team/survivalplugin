@@ -15,7 +15,7 @@ public class SpawnCommand extends Command{
 
     @Override
     public void register() {
-        this.commandManager.command(this.commandManager.commandBuilder("spawn").handler(this::spawn));
+        commandManager.command(commandManager.commandBuilder("spawn").handler(this::spawn));
     }
 
     private void spawn(CommandContext<CommandSender> context) {

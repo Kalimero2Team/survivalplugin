@@ -44,7 +44,10 @@ public class CommandManager extends PaperCommandManager<CommandSender> {
                 new DiscordCommand(plugin, this),
                 new SpawnCommand(plugin,this),
                 new MuteCommand(plugin, this),
-                new IntroductionCommand(plugin, this)
+                new IntroductionCommand(plugin, this),
+                new BedCommand(plugin, this),
+                new CraftingTableCommand(plugin, this),
+                new EnderChestCommand(plugin, this)
         ).forEach(Command::register);
 
 

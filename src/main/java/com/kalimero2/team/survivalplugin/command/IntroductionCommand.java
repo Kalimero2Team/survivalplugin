@@ -14,10 +14,10 @@ public class IntroductionCommand extends Command{
 
     @Override
     public void register() {
-        this.commandManager.command(this.commandManager.commandBuilder("introduction").handler(this::introduction));
-        this.commandManager.command(this.commandManager.commandBuilder("info").handler(this::introduction));
-        this.commandManager.command(this.commandManager.commandBuilder("intro").handler(this::introduction));
-        this.commandManager.command(this.commandManager.commandBuilder("einführung").handler(this::introduction));
+        commandManager.command(commandManager.commandBuilder("introduction").handler(this::introduction));
+        commandManager.command(commandManager.commandBuilder("info").handler(this::introduction));
+        commandManager.command(commandManager.commandBuilder("intro").handler(this::introduction));
+        commandManager.command(commandManager.commandBuilder("einführung").handler(this::introduction));
     }
 
     private void introduction(CommandContext<CommandSender> context) {

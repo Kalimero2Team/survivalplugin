@@ -29,6 +29,10 @@ message:
       force_off: "Forced Mode: <green>Disabled</green>"
     discord:
       info: "Name: <hover:show_text:\"ID: <discord_id>\"><discord_name> "
+    enderchest:
+      fail_never_crafted: "You haven't crafted any Ender Chests yet"
+    craftingtable:
+      fail_never_crafted: "You haven't crafted any Crafting Table yet"
   discord:
     rules_message: "To join the server you have to accept these rules"
     rules_accepted: "You have accepted the rules. You can now join the Server"

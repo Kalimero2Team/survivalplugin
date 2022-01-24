@@ -34,15 +34,15 @@ public class ChunkCommand extends Command{
 
     @Override
     public void register() {
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").handler(this::info));
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").literal("add").argument(OfflinePlayerArgument.of("player")).handler(this::add));
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").literal("remove").argument(OfflinePlayerArgument.of("player")).handler(this::remove));
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").literal("claim").handler(this::claim));
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").literal("unclaim").handler(this::unClaim));
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").literal("border").handler(this::border));
-        this.commandManager.command(this.commandManager.commandBuilder("chunkborder").handler(this::border));
-        this.commandManager.command(this.commandManager.commandBuilder("cb").handler(this::border));
-        this.commandManager.command(this.commandManager.commandBuilder("chunk").literal("force").permission("admin").handler(this::force));
+        commandManager.command(commandManager.commandBuilder("chunk").handler(this::info));
+        commandManager.command(commandManager.commandBuilder("chunk").literal("add").argument(OfflinePlayerArgument.of("player")).handler(this::add));
+        commandManager.command(commandManager.commandBuilder("chunk").literal("remove").argument(OfflinePlayerArgument.of("player")).handler(this::remove));
+        commandManager.command(commandManager.commandBuilder("chunk").literal("claim").handler(this::claim));
+        commandManager.command(commandManager.commandBuilder("chunk").literal("unclaim").handler(this::unClaim));
+        commandManager.command(commandManager.commandBuilder("chunk").literal("border").handler(this::border));
+        commandManager.command(commandManager.commandBuilder("chunkborder").handler(this::border));
+        commandManager.command(commandManager.commandBuilder("cb").handler(this::border));
+        commandManager.command(commandManager.commandBuilder("chunk").literal("force").permission("admin").handler(this::force));
     }
 
     private String getConfigString(String path){

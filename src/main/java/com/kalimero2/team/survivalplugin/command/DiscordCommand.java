@@ -25,7 +25,7 @@ public class DiscordCommand extends Command{
 
     @Override
     public void register() {
-        this.commandManager.command(this.commandManager.commandBuilder("discord").argument(OfflinePlayerArgument.optional("player")).handler(this::info));
+        commandManager.command(commandManager.commandBuilder("discord").argument(OfflinePlayerArgument.optional("player")).handler(this::info));
     }
 
     private void info(CommandContext<CommandSender> context) {
