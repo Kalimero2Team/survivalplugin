@@ -49,4 +49,3 @@ message:
   join:
     fail_whitelist: "You are not on the whitelist :(
     Your code is: <code>"
-    fail_rules_not_accepted: "You must accept the rules to join the server."

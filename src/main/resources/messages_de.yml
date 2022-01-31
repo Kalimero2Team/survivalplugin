@@ -49,4 +49,3 @@ message:
     add: 'Zur Whitelist hinzufügen'
   join:
     fail_whitelist: 'Um diesen Server beizutreten, gib den Code <bold><code></bold> auf dem Discord ein. (<bold>INVITE EINFÜGEN</bold>)'
-    fail_rules_not_accepted: 'Du musst auf dem Discord die Regeln akzeptieren, um auf diesem Server spielen zu können.'

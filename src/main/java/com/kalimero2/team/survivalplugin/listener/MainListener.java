@@ -29,11 +29,10 @@ import java.util.*;
 
 public class MainListener implements Listener {
 
-    private MongoDB database;
-    private DiscordBot discordBot;
-    private SurvivalPlugin plugin;
-    private List<MinecraftUser> list;
-    private Random random;
+    private final MongoDB database;
+    private final DiscordBot discordBot;
+    private final SurvivalPlugin plugin;
+    private final Random random;
 
     public MainListener(SurvivalPlugin plugin){
         this.database = plugin.getDatabase();
@@ -114,12 +113,14 @@ public class MainListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event){
         Component component = event.deathMessage();
-        event.deathMessage(Component.text("☠ ").append(component));
-        if(event.getPlayer().getWorld().getEnvironment().equals(World.Environment.THE_END)){
-            if(event.getPlayer().getWorld().getNearbyEntitiesByType(EnderDragon.class, event.getPlayer().getLocation(), 1000).size() >= 1){
-                event.setKeepInventory(true);
-                event.setKeepLevel(false);
-                event.getDrops().clear();
+        if(component != null){
+            event.deathMessage(Component.text("☠ ").append(component));
+            if(event.getPlayer().getWorld().getEnvironment().equals(World.Environment.THE_END)){
+                if(event.getPlayer().getWorld().getNearbyEntitiesByType(EnderDragon.class, event.getPlayer().getLocation(), 1000).size() >= 1){
+                    event.setKeepInventory(true);
+                    event.setKeepLevel(false);
+                    event.getDrops().clear();
+                }
             }
         }
     }
@@ -131,14 +132,14 @@ public class MainListener implements Listener {
 
     @EventHandler
     public void onPreLogin(AsyncPlayerPreLoginEvent event){
-        list = database.getUsers();
+        List<MinecraftUser> list = database.getUsers();
         PlayerProfile player = event.getPlayerProfile();
 
         if(player.getId() == null){
             return;
         }
 
-        MinecraftUser minecraftUser = null;
+        MinecraftUser minecraftUser;
 
         Optional<MinecraftUser> minecraftUserOptional = list.stream().filter(user -> Objects.equals(user.getUuid(), player.getId().toString())).findAny();
 
@@ -154,15 +155,12 @@ public class MainListener implements Listener {
             minecraftUser = minecraftUserOptional.get();
         }
 
-        if(minecraftUser.getDiscordUser() != null){
+        if(minecraftUser.isRulesAccepted()){
             if(!discordBot.checkDiscord(minecraftUser.getDiscordUser())){
                 minecraftUser.setDiscordUser(null);
                 database.updateUser(minecraftUser);
             }
-        }
-
-        if(minecraftUser.getDiscordUser() == null){
-
+        }else{
             Map<String,MinecraftUser> codeIdMap = plugin.codeIdMap;
 
             String randomCode = null;
@@ -189,9 +187,6 @@ public class MainListener implements Listener {
             Template codetemplate = Template.of("code", randomCode);
             Component message = MiniMessage.get().parse(plugin.messageUtil.getString("message.join.fail_whitelist"),codetemplate);
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, message);
-        }else if(!minecraftUser.isRulesAccepted()){
-            Component message = MiniMessage.get().parse(plugin.messageUtil.getString("message.join.fail_rules_not_accepted"));
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, message);
         }
 
         MinecraftUser finalMinecraftUser = minecraftUser;
