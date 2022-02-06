@@ -49,3 +49,5 @@ message:
     add: 'Zur Whitelist hinzufügen'
   join:
     fail_whitelist: 'Um diesen Server beizutreten, gib den Code <bold><code></bold> auf dem Discord ein. (<bold>INVITE EINFÜGEN</bold>)'
+vip_mode:
+  kick: "Server ist voll. Es können aktuell nur <gold>VIP</gold> Spieler joinen."

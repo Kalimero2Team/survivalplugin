@@ -40,8 +40,7 @@ public class ChunkCommand extends Command{
         commandManager.command(commandManager.commandBuilder("chunk").literal("claim").handler(this::claim));
         commandManager.command(commandManager.commandBuilder("chunk").literal("unclaim").handler(this::unClaim));
         commandManager.command(commandManager.commandBuilder("chunk").literal("border").handler(this::border));
-        commandManager.command(commandManager.commandBuilder("chunkborder").handler(this::border));
-        commandManager.command(commandManager.commandBuilder("cb").handler(this::border));
+        commandManager.command(commandManager.commandBuilder("chunkborder","cb").handler(this::border));
         commandManager.command(commandManager.commandBuilder("chunk").literal("force").permission("admin").handler(this::force));
     }
 

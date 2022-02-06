@@ -49,6 +49,10 @@ public class AdminCommand extends Command{
         commandManager.command(commandManager.commandBuilder("admin").literal("max-players").argument(IntegerArgument.of("amount")).permission("survivalplugin.admin.max-players").handler(this::setMaxPlayers));
         commandManager.command(commandManager.commandBuilder("admin").literal("maintenance").literal("on").argument(StringArgument.greedy("text")).permission("survivalplugin.admin.maintenance").handler(this::maintenanceOn));
         commandManager.command(commandManager.commandBuilder("admin").literal("maintenance").literal("off").permission("survivalplugin.admin.maintenance").handler(this::maintenanceOff));
+        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("on").permission("survivalplugin.admin.vipmode").handler(this::vipOn));
+        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("off").permission("survivalplugin.admin.vipmode").handler(this::vipOff));
+        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("add").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.vipmode").handler(this::vipAdd));
+        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("remove").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.vipmode").handler(this::vipRemove));
     }
 
     private void reload(CommandContext<CommandSender> context){
@@ -229,6 +233,28 @@ public class AdminCommand extends Command{
     }
     private void maintenanceOff(CommandContext<CommandSender> context){
         plugin.maintenance = null;
+    }
+
+    private void vipOn(CommandContext<CommandSender> context){
+        plugin.vipOnly = true;
+    }
+
+    private void vipOff(CommandContext<CommandSender> context){
+        plugin.vipOnly = true;
+    }
+
+    private void vipAdd(CommandContext<CommandSender> context){
+        OfflinePlayer player = context.get("player");
+        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
+        extraPlayerData.vip = true;
+        plugin.claimManager.setExtraPlayerData(player, extraPlayerData);
+    }
+
+    private void vipRemove(CommandContext<CommandSender> context){
+        OfflinePlayer player = context.get("player");
+        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
+        extraPlayerData.vip = false;
+        plugin.claimManager.setExtraPlayerData(player, extraPlayerData);
     }
 }
 

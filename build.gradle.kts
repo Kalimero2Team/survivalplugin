@@ -26,7 +26,7 @@ dependencies {
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
     implementation("net.kyori","adventure-text-minimessage","4.1.0-SNAPSHOT")
     implementation("org.mongodb","mongodb-driver-sync","4.4.0")
-    implementation("org.javacord","javacord","3.3.2")
+    implementation("org.javacord","javacord","3.4.0")
     implementation("cloud.commandframework","cloud-paper","1.6.1")
     implementation("de.jeff_media","MorePersistentDataTypes","1.0.0")
 }

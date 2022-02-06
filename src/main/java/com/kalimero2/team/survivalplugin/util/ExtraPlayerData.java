@@ -12,15 +12,18 @@ public class ExtraPlayerData implements Serializable {
 
     public final HashSet<SerializableChunk> chunks;
     public Integer maxclaims;
+    public boolean vip;
 
-    public ExtraPlayerData(HashSet<SerializableChunk> chunks, Integer maxclaims) {
+    public ExtraPlayerData(HashSet<SerializableChunk> chunks, Integer maxclaims, boolean vip) {
         this.chunks = chunks;
         this.maxclaims = maxclaims;
+        this.vip = vip;
     }
 
     public ExtraPlayerData(ExtraPlayerData loadedData) {
         this.chunks = loadedData.chunks;
         this.maxclaims = loadedData.maxclaims;
+        this.vip = loadedData.vip;
     }
 
     public boolean saveData(String filePath) {
@@ -58,19 +61,11 @@ public class ExtraPlayerData implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ExtraPlayerData that = (ExtraPlayerData) o;
-        return Objects.equals(chunks, that.chunks) && Objects.equals(maxclaims, that.maxclaims);
+        return vip == that.vip && Objects.equals(chunks, that.chunks) && Objects.equals(maxclaims, that.maxclaims);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(chunks, maxclaims);
-    }
-
-    @Override
-    public String toString() {
-        return "ExtraPlayerData{" +
-                "chunks=" + chunks +
-                ", maxclaims=" + maxclaims +
-                '}';
+        return Objects.hash(chunks, maxclaims, vip);
     }
 }

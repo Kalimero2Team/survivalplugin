@@ -149,7 +149,7 @@ public class ClaimManager {
     public ExtraPlayerData getExtraPlayerData(OfflinePlayer offlinePlayer){
         File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId().toString() + ".json");
         if(!file.exists()){
-            return new ExtraPlayerData(new HashSet<>(), plugin.getConfig().getInt("claim.max-claims"));
+            return new ExtraPlayerData(new HashSet<>(), plugin.getConfig().getInt("claim.max-claims"),false);
         }
         return ExtraPlayerData.loadData(file.getAbsolutePath());
     }

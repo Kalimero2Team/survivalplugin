@@ -24,6 +24,7 @@ import org.javacord.api.event.interaction.MessageComponentCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.server.member.ServerMemberLeaveEvent;
 import org.javacord.api.interaction.MessageComponentInteraction;
+import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.listener.interaction.MessageComponentCreateListener;
 import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.listener.server.member.ServerMemberLeaveListener;
@@ -231,7 +232,7 @@ public class DiscordBot implements MessageCreateListener, ServerMemberLeaveListe
                     }
 
                     if(textChannel != null)
-                        messageComponentInteraction.createImmediateResponder().setContent(textChannel.getMentionTag()).setFlags(MessageFlag.EPHEMERAL).respond();
+                        messageComponentInteraction.createImmediateResponder().setContent(textChannel.getMentionTag()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
                     return;
                 }
             }
@@ -249,7 +250,7 @@ public class DiscordBot implements MessageCreateListener, ServerMemberLeaveListe
                                     case "accept" -> {
                                         messageComponentInteraction.createImmediateResponder()
                                                 .setContent(plugin.messageUtil.getString("message.discord.rules_accepted"))
-                                                .setFlags(MessageFlag.EPHEMERAL)
+                                                .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
                                                 .respond();
                                         plugin.getLogger().info(user.getName() + " accepted the rules");
                                         user.setRulesAccepted(true);
@@ -259,17 +260,17 @@ public class DiscordBot implements MessageCreateListener, ServerMemberLeaveListe
                                         if(role != null) {
                                             event.getMessageComponentInteraction().getUser().addRole(role);
                                         }
-                                        messageComponentInteraction.getMessage().get().getChannel().asServerTextChannel().get().delete();
+                                        messageComponentInteraction.getMessage().getChannel().asServerTextChannel().get().delete();
                                         return;
                                     }
                                     case "deny" -> {
                                         messageComponentInteraction.createImmediateResponder()
                                                 .setContent(plugin.messageUtil.getString("message.discord.rules_denied"))
-                                                .setFlags(MessageFlag.EPHEMERAL)
+                                                .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
                                                 .respond();
                                         plugin.getLogger().info(user.getName() + " denied the rules");
                                         removeDiscordUser(user);
-                                        messageComponentInteraction.getMessage().get().delete();
+                                        messageComponentInteraction.getMessage().delete();
                                         return;
                                     }
                                 }
@@ -324,6 +325,17 @@ public class DiscordBot implements MessageCreateListener, ServerMemberLeaveListe
             }
         }
         return null;
+    }
+
+    public List<Role> getRoles(DiscordUser user){
+        List<Role> roles = new ArrayList<>();
+        for(Server server:discordApi.getServers()){
+            Optional<User> optionalUser = server.getMemberById(user.getDiscordId());
+            if(optionalUser.isPresent()){
+                roles.addAll(server.getRoles(optionalUser.get()));
+            }
+        }
+        return roles;
     }
 
     public boolean checkDiscord(DiscordUser user){

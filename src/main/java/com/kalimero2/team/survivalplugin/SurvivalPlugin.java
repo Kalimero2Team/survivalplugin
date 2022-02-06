@@ -23,7 +23,8 @@ public final class SurvivalPlugin extends JavaPlugin {
     private MongoDB database;
     private DiscordBot discordBot;
     private LogDiscordAppender logDiscordAppender;
-    public boolean chatMute;
+    public boolean chatMute = false;
+    public boolean vipOnly = false;
     public Component maintenance;
     public FloodgateApi floodgateApi;
     public Component motd;

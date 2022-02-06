@@ -4,6 +4,7 @@ import com.destroystokyo.paper.event.server.PaperServerListPingEvent;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
+import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
 import de.jeff_media.morepersistentdatatypes.DataType;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import com.kalimero2.team.survivalplugin.database.MongoDB;
@@ -44,6 +45,7 @@ public class MainListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
+        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
 
         String header_string = plugin.getConfig().getString("tab.header");
 
@@ -60,6 +62,8 @@ public class MainListener implements Listener {
         Component playerlistname ;
         if(player.hasPermission("team")){
             playerlistname = Component.text("Team ").color(NamedTextColor.DARK_AQUA).append(player.name().color(NamedTextColor.WHITE));
+        }else if(extraPlayerData.vip){
+            playerlistname = Component.text("VIP ").color(NamedTextColor.GOLD).append(player.name().color(NamedTextColor.WHITE));
         }else {
             playerlistname = Component.text("Spieler ").color(NamedTextColor.GRAY).append(player.name().color(NamedTextColor.WHITE));
         }
@@ -101,8 +105,11 @@ public class MainListener implements Listener {
         }
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             Component prefix = Component.text("Spieler ").color(NamedTextColor.GRAY);
+            ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(source);
             if(source.hasPermission("team")){
                 prefix = Component.text("Team ").color(NamedTextColor.DARK_AQUA);
+            }else if(extraPlayerData.vip){
+                prefix = Component.text("VIP ").color(NamedTextColor.GOLD);
             }
 
             return MiniMessage.get().parse("<prefix><player> <bold>»</bold> <message>",Template.of("prefix", prefix),Template.of("player", event.getPlayer().getName()), Template.of("message",message));
@@ -159,6 +166,14 @@ public class MainListener implements Listener {
             if(!discordBot.checkDiscord(minecraftUser.getDiscordUser())){
                 minecraftUser.setDiscordUser(null);
                 database.updateUser(minecraftUser);
+            }else {
+                discordBot.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
+                    if(plugin.getConfig().getStringList("vip_roles").contains(role.getIdAsString())){
+                        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
+                        extraPlayerData.vip = true;
+                        plugin.claimManager.setExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()), extraPlayerData);
+                    }
+                });
             }
         }else{
             Map<String,MinecraftUser> codeIdMap = plugin.codeIdMap;
@@ -204,6 +219,13 @@ public class MainListener implements Listener {
         if(!plugin.getServer().getOfflinePlayer(event.getUniqueId()).isOp()){
             if(plugin.maintenance != null){
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, plugin.maintenance);
+            }
+        }
+
+        if(plugin.vipOnly){
+            ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
+            if(!extraPlayerData.vip){
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, plugin.messageUtil.getMessage("vip_mode.kick"));
             }
         }
     }

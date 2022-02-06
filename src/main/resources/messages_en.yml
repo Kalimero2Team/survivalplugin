@@ -49,3 +49,5 @@ message:
   join:
     fail_whitelist: "You are not on the whitelist :(
     Your code is: <code>"
+vip_mode:
+  kick: "Server is full. Current only <gold>VIP</gold> Players can join."

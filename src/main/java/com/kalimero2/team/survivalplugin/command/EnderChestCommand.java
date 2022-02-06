@@ -16,8 +16,7 @@ public class EnderChestCommand extends Command{
 
     @Override
     public void register() {
-        commandManager.command(commandManager.commandBuilder("enderchest").handler(this::enderChest));
-        commandManager.command(commandManager.commandBuilder("ec").handler(this::enderChest));
+        commandManager.command(commandManager.commandBuilder("enderchest","ec").handler(this::enderChest));
 
     }
 

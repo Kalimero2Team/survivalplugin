@@ -15,9 +15,7 @@ public class CraftingTableCommand extends Command{
 
     @Override
     public void register() {
-        commandManager.command(commandManager.commandBuilder("craftingtable").handler(this::craftingTable));
-        commandManager.command(commandManager.commandBuilder("ct").handler(this::craftingTable));
-
+        commandManager.command(commandManager.commandBuilder("craftingtable","ct").handler(this::craftingTable));
     }
 
 
