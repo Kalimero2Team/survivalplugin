@@ -6,6 +6,7 @@ import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.listener.ClaimListener;
 import com.kalimero2.team.survivalplugin.listener.MainListener;
+import com.kalimero2.team.survivalplugin.recipe.CustomRecipes;
 import com.kalimero2.team.survivalplugin.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -90,6 +91,7 @@ public final class SurvivalPlugin extends JavaPlugin {
             plugin.getLogger().warning("Failed to initialize Commands" + e.getMessage());
         }
 
+        new CustomRecipes(this);
 
         logDiscordAppender = new LogDiscordAppender(plugin.getConfig().getString("discord.webhook"));
         if(logDiscordAppender.connect()){

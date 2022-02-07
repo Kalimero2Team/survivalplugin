@@ -15,7 +15,7 @@ chunk:
   entity:
     limit: 50
 
-vip_roles: ["920744780110135330"]
+vip-roles: []
 messages: "messages_en.yml"
 rules: ["Rule 1","Rule 2","Rule 3","Rule 4"]
 introduction: ["Page 1","Page 2","Page 3","Page 4"]
