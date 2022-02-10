@@ -6,6 +6,7 @@ import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.listener.ClaimListener;
 import com.kalimero2.team.survivalplugin.listener.MainListener;
+import com.kalimero2.team.survivalplugin.listener.ShulkerSpawnListener;
 import com.kalimero2.team.survivalplugin.recipe.CustomRecipes;
 import com.kalimero2.team.survivalplugin.util.*;
 import net.kyori.adventure.text.Component;
@@ -77,6 +78,7 @@ public final class SurvivalPlugin extends JavaPlugin {
         plugin.getServer().getPluginManager().registerEvents(new MainListener(plugin), plugin);
         plugin.getServer().getPluginManager().registerEvents(new ClaimListener(plugin), plugin);
         plugin.getServer().getPluginManager().registerEvents(new ChunkBorders(plugin), plugin);
+        plugin.getServer().getPluginManager().registerEvents(new ShulkerSpawnListener(),plugin);
 
         plugin.getLogger().info("Registered Events");
 
