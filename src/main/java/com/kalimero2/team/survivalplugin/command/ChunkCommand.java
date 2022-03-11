@@ -8,7 +8,8 @@ import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
 import com.kalimero2.team.survivalplugin.util.MessageUtil;
 import com.kalimero2.team.survivalplugin.util.ChunkBorders;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Chunk;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -55,7 +56,7 @@ public class ChunkCommand extends Command{
         if(context.getSender() instanceof Player player){
             Chunk chunk = player.getLocation().getChunk();
 
-            messageUtil.sendMessage(player,"message.command.chunk.info", Template.of("chunk_x", Component.text(chunk.getX())), Template.of("chunk_z", Component.text(chunk.getZ())));
+            messageUtil.sendMessage(player,"message.command.chunk.info", Placeholder.component("chunk_x", Component.text(chunk.getX())), Placeholder.component("chunk_z", Component.text(chunk.getZ())));
 
             if(claimManager.isClaimed(chunk)){
                 messageUtil.sendMessage(player, "message.command.chunk.claimed_true");
@@ -63,14 +64,14 @@ public class ChunkCommand extends Command{
                 if(claimManager.isTeamClaim(chunk)){
                     messageUtil.sendMessage(player, "message.command.chunk.team_chunk");
                 }else {
-                    messageUtil.sendMessage(player, "message.command.chunk.claim_owner", Template.of("player", Objects.requireNonNullElse(claimManager.getOwner(chunk).getName(),"player")));
+                    messageUtil.sendMessage(player, "message.command.chunk.claim_owner", Placeholder.unparsed("player", Objects.requireNonNullElse(claimManager.getOwner(chunk).getName(),"player")));
                 }
 
                 List<OfflinePlayer> trustedPlayers = claimManager.getTrustedList(chunk);
                 if(trustedPlayers.size() >= 1){
                     messageUtil.sendMessage(player, "message.command.chunk.claim_trusted_start");
                     for(OfflinePlayer trustedPlayer:trustedPlayers){
-                        messageUtil.sendMessage(player, "message.command.chunk.claim_trusted_player", Template.of("player", Objects.requireNonNullElse(trustedPlayer.getName(),"player")));
+                        messageUtil.sendMessage(player, "message.command.chunk.claim_trusted_player", Placeholder.unparsed("player", Objects.requireNonNullElse(trustedPlayer.getName(),"player")));
                     }
                 }
             }else {
@@ -83,21 +84,21 @@ public class ChunkCommand extends Command{
         if(context.getSender() instanceof Player player) {
             Chunk chunk = player.getLocation().getChunk();
             OfflinePlayer target = context.get("player");
-            Template target_template = Template.of("player", Objects.requireNonNullElse(target.getName(),"target_name"));
+            TagResolver.Single target_placeholder = Placeholder.unparsed("player", Objects.requireNonNullElse(target.getName(),"target_name"));
 
             if (claimManager.isClaimed(chunk)) {
                 if(claimManager.getOwner(player.getLocation().getChunk()).equals(player) || forcedOwner.contains(player.getUniqueId())){
                     if(!claimManager.getTrustedList(chunk).contains(target)){
                         claimManager.trust(chunk,target);
-                        messageUtil.sendMessage(player,"message.command.chunk.claim_add_success", target_template);
+                        messageUtil.sendMessage(player,"message.command.chunk.claim_add_success", target_placeholder);
                     }else {
-                        messageUtil.sendMessage(player,"message.command.chunk.claim_add_fail_already_added", target_template);
+                        messageUtil.sendMessage(player,"message.command.chunk.claim_add_fail_already_added", target_placeholder);
                     }
                 }else {
-                    messageUtil.sendMessage(player,"message.command.chunk.claim_fail_owner", target_template);
+                    messageUtil.sendMessage(player,"message.command.chunk.claim_fail_owner", target_placeholder);
                 }
             } else {
-                messageUtil.sendMessage(player,"message.command.chunk.claim_add_fail_not_claimed", target_template);
+                messageUtil.sendMessage(player,"message.command.chunk.claim_add_fail_not_claimed", target_placeholder);
             }
 
         }
@@ -107,21 +108,21 @@ public class ChunkCommand extends Command{
         if(context.getSender() instanceof Player player) {
             Chunk chunk = player.getLocation().getChunk();
             OfflinePlayer target = context.get("player");
-            Template target_template = Template.of("player", Objects.requireNonNullElse(target.getName(),"target_name"));
+            TagResolver.Single target_placeholder = Placeholder.unparsed("player", Objects.requireNonNullElse(target.getName(),"target_name"));
 
             if (claimManager.isClaimed(chunk)) {
                 if(claimManager.getOwner(player.getLocation().getChunk()).equals(player) || forcedOwner.contains(player.getUniqueId())){
                     if(claimManager.getTrustedList(chunk).contains(target)){
                         claimManager.unTrust(chunk,target);
-                        messageUtil.sendMessage(player,"message.command.chunk.claim_remove_success",target_template);
+                        messageUtil.sendMessage(player,"message.command.chunk.claim_remove_success",target_placeholder);
                     }else {
-                        messageUtil.sendMessage(player,"message.command.chunk.claim_remove_fail_already_removed",target_template);
+                        messageUtil.sendMessage(player,"message.command.chunk.claim_remove_fail_already_removed",target_placeholder);
                     }
                 }else {
-                    messageUtil.sendMessage(player,"message.command.chunk.claim_fail_owner",target_template);
+                    messageUtil.sendMessage(player,"message.command.chunk.claim_fail_owner",target_placeholder);
                 }
             } else {
-                messageUtil.sendMessage(player,"message.command.chunk.claim_remove_fail_not_claimed",target_template);
+                messageUtil.sendMessage(player,"message.command.chunk.claim_remove_fail_not_claimed",target_placeholder);
 
             }
         }
@@ -138,8 +139,7 @@ public class ChunkCommand extends Command{
 
             if(!claimManager.canClaim(player)){
                 ExtraPlayerData extraPlayerData = claimManager.getExtraPlayerData(player);
-                List<Template> templates = List.of(Template.of("count", Component.text(extraPlayerData.chunks.size())), Template.of("max_count", Component.text(extraPlayerData.maxclaims)));
-                messageUtil.sendMessage(player,"message.command.chunk.claim_fail_too_many_claims",templates);
+                messageUtil.sendMessage(player,"message.command.chunk.claim_fail_too_many_claims",Placeholder.component("count", Component.text(extraPlayerData.chunks.size())), Placeholder.component("max_count", Component.text(extraPlayerData.maxclaims)));
                 return;
             }
 

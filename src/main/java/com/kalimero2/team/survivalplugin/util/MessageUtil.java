@@ -3,7 +3,7 @@ package com.kalimero2.team.survivalplugin.util;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -25,20 +25,14 @@ public class MessageUtil {
         messageConfiguration = YamlConfiguration.loadConfiguration(messageConfig);
     }
 
-    public void sendMessage(CommandSender sender, String configString, Template... templates){
-        sendMessage(sender, configString, List.of(templates));
-    }
-    public void sendMessage(CommandSender sender, String configString, List<Template> templates){
-        sender.sendMessage(getMessage(configString, templates));
+    public void sendMessage(CommandSender sender, String configString, TagResolver... tagResolvers){
+        sender.sendMessage(getMessage(configString,tagResolvers));
     }
 
-    public Component getMessage(String configString, Template... templates){
-        return getMessage(configString, List.of(templates));
+    public Component getMessage(String configString, TagResolver... tagResolvers){
+        return MiniMessage.miniMessage().deserialize(getString(configString), tagResolvers);
     }
 
-    public Component getMessage(String configString, List<Template> templates){
-        return MiniMessage.get().parse(getString(configString), templates);
-    }
 
     public String getString(String configString){
         return Objects.requireNonNullElse(messageConfiguration.getString(configString), configString);

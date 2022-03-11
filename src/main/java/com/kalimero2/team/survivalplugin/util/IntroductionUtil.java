@@ -4,7 +4,7 @@ import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.geysermc.cumulus.Form;
 import org.geysermc.cumulus.SimpleForm;
@@ -22,13 +22,13 @@ public class IntroductionUtil {
 
     public Book getBook(){
         List<Component> pages = new ArrayList<>();
-        plugin.getConfig().getStringList("introduction").forEach(s -> pages.add(MiniMessage.get().parse(s, Template.of("br","\n"))));
+        plugin.getConfig().getStringList("introduction").forEach(s -> pages.add(MiniMessage.miniMessage().deserialize(s, Placeholder.parsed("br","\n"))));
         return Book.book(Component.text("introduction"), Component.text("Server"),pages);
     }
 
     public Form getForm(){
         List<Component> pages = new ArrayList<>();
-        plugin.getConfig().getStringList("introduction").forEach(s -> pages.add(MiniMessage.get().parse(s, Template.of("br","\n"))));
+        plugin.getConfig().getStringList("introduction").forEach(s -> pages.add(MiniMessage.miniMessage().deserialize(s, Placeholder.parsed("br","\n"))));
 
         StringBuilder content = new StringBuilder();
         pages.forEach(component -> {content.append(LegacyComponentSerializer.legacySection().serialize(component));content.append("\n");});

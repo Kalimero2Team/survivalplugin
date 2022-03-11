@@ -20,14 +20,12 @@ repositories {
 dependencies {
     bukkitLibrary("com.google.code.gson","gson","2.8.9")
     bukkitLibrary("commons-io","commons-io","2.11.0")
-    bukkitLibrary("org.apache.logging.log4j","log4j-core","2.17.0")
-    bukkitLibrary("club.minnced","discord-webhooks","0.7.4")
-    compileOnly("io.papermc.paper","paper-api","1.18.1-R0.1-SNAPSHOT")
+    bukkitLibrary("org.apache.logging.log4j","log4j-core","2.17.1")
+    compileOnly("io.papermc.paper","paper-api","1.18.2-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
-    implementation("net.kyori","adventure-text-minimessage","4.1.0-SNAPSHOT")
     implementation("org.mongodb","mongodb-driver-sync","4.4.0")
     implementation("org.javacord","javacord","3.4.0")
-    implementation("cloud.commandframework","cloud-paper","1.6.1")
+    implementation("cloud.commandframework","cloud-paper","1.6.2")
     implementation("de.jeff_media","MorePersistentDataTypes","1.0.0")
 }
 
@@ -42,7 +40,6 @@ bukkit {
     authors = listOf("byquanton")
     depend = listOf("floodgate")
 }
-
 
 
 tasks {
@@ -63,6 +60,6 @@ tasks {
     }
 
     runServer{
-        minecraftVersion.set("1.18.1")
+        minecraftVersion.set("1.18.2")
     }
 }

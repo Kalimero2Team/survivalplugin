@@ -44,10 +44,7 @@ public class ClaimManager {
 
     public List<OfflinePlayer> getTrustedList(Chunk chunk){
         List<OfflinePlayer> trustList = new ArrayList<>();
-        if(chunk.getPersistentDataContainer().has(trusted_key,PersistentDataType.STRING)){ /*Convert to something better*/
-            chunk.getPersistentDataContainer().remove(trusted_key);
-            chunk.getPersistentDataContainer().set(trusted_key, DataType.OFFLINE_PLAYER_ARRAY , trustList.toArray(new OfflinePlayer[0]));
-        }else if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
+        if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
             List<OfflinePlayer> list =  Arrays.stream(chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)).toList();
             trustList = new ArrayList<>(list); // http://stackoverflow.com/questions/5755477/ddg#5755510
         }
@@ -57,7 +54,7 @@ public class ClaimManager {
 
     public Component getTeamClaimMessage(Chunk chunk){
         if(isTeamClaim(chunk)){
-            return MiniMessage.get().parse(Objects.requireNonNullElse(chunk.getPersistentDataContainer().get(teamclaim_key, PersistentDataType.STRING), ""));
+            return MiniMessage.miniMessage().deserialize(Objects.requireNonNullElse(chunk.getPersistentDataContainer().get(teamclaim_key, PersistentDataType.STRING), ""));
         }
         return Component.text("");
     }

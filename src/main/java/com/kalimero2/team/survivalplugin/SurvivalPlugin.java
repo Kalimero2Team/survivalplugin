@@ -24,7 +24,6 @@ public final class SurvivalPlugin extends JavaPlugin {
 
     private MongoDB database;
     private DiscordBot discordBot;
-    private LogDiscordAppender logDiscordAppender;
     public boolean chatMute = false;
     public boolean vipOnly = false;
     public Component maintenance;
@@ -94,22 +93,7 @@ public final class SurvivalPlugin extends JavaPlugin {
         }
 
         new CustomRecipes(this);
-
-        logDiscordAppender = new LogDiscordAppender(plugin.getConfig().getString("discord.webhook"));
-        if(logDiscordAppender.connect()){
-            logDiscordAppender.sendUpdateEmbed("Server Status Update","Server Starting");
-            plugin.getLogger().info("Enabled Discord Log Appender");
-        }else {
-            plugin.getLogger().warning("Discord Log Appender failed to load");
-        }
-
     }
-
-    @Override
-    public void onDisable() {
-        logDiscordAppender.sendUpdateEmbed("Server Status Update","Server Stopping");
-    }
-
 
     public DiscordBot getDiscordBot() {
         return discordBot;

@@ -5,7 +5,7 @@ import cloud.commandframework.context.CommandContext;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.database.MongoDB;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -35,7 +35,7 @@ public class DiscordCommand extends Command{
             User user = discordBot.getMember(database.getUser(target.getUniqueId()).getDiscordUser());
             String name = user.getName()+ "#" + user.getDiscriminator();
             String id = user.getIdAsString();
-            plugin.messageUtil.sendMessage(player, "message.command.discord.info",Template.of("discord_name",name),Template.of("discord_id",id));
+            plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name",name),Placeholder.unparsed("discord_id",id));
         }
     }
 

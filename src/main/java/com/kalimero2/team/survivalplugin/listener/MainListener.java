@@ -12,7 +12,8 @@ import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.EnderDragon;
@@ -50,13 +51,13 @@ public class MainListener implements Listener {
         String header_string = plugin.getConfig().getString("tab.header");
 
         if(header_string != null){
-            player.sendPlayerListHeader(MiniMessage.get().parse(header_string));
+            player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(header_string));
         }
 
         String footer_string = plugin.getConfig().getString("tab.footer");
 
         if(footer_string != null){
-            player.sendPlayerListFooter(MiniMessage.get().parse(footer_string));
+            player.sendPlayerListFooter(MiniMessage.miniMessage().deserialize(footer_string));
         }
 
         Component playerlistname ;
@@ -112,7 +113,7 @@ public class MainListener implements Listener {
                 prefix = Component.text("VIP ").color(NamedTextColor.GOLD);
             }
 
-            return MiniMessage.get().parse("<prefix><player> <bold>»</bold> <message>",Template.of("prefix", prefix),Template.of("player", event.getPlayer().getName()), Template.of("message",message));
+            return MiniMessage.miniMessage().deserialize("<prefix><player> <bold>»</bold> <message>",Placeholder.component("prefix", prefix),Placeholder.unparsed("player", event.getPlayer().getName()), Placeholder.component("message",message));
 
         });
     }
@@ -199,8 +200,8 @@ public class MainListener implements Listener {
 
             codeIdMap.put(randomCode, minecraftUser);
 
-            Template codetemplate = Template.of("code", randomCode);
-            Component message = MiniMessage.get().parse(plugin.messageUtil.getString("message.join.fail_whitelist"),codetemplate);
+            TagResolver.Single codetemplate = Placeholder.unparsed("code", randomCode);
+            Component message = plugin.messageUtil.getMessage("message.join.fail_whitelist",codetemplate);
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, message);
         }
 

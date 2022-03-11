@@ -306,7 +306,7 @@ public class DiscordBot implements MessageCreateListener, ServerMemberLeaveListe
                 public void run() {
                     OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(UUID.fromString(finalMcuser.getUuid()));
                     if(offlinePlayer.isOnline()){
-                        offlinePlayer.getPlayer().kick(MiniMessage.get().parse(plugin.messageUtil.getString("message.discord.quit")));
+                        offlinePlayer.getPlayer().kick(plugin.messageUtil.getMessage("message.discord.quit"));
                     }
 
                 }

@@ -121,39 +121,24 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event){
         if(event.getDamager() instanceof Player player){
-            onEntityDamageByPlayer(event, player);
-        }else{
-            if(event.getDamager() instanceof Projectile projectile){
-                if(event.getEntity() instanceof Hanging){
+            if(event.getEntity() instanceof Player || event.getEntity() instanceof Monster){
+                event.setCancelled(false);
+                return;
+            }else if(event.getEntity() instanceof Animals || event.getEntity() instanceof Tameable || event.getEntity() instanceof NPC || event.getEntity() instanceof Hanging || event.getEntity() instanceof ArmorStand){
+                if(shouldcancel(event.getEntity().getLocation().getChunk(), player)){
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+
+            if(claimManager.isTeamClaim(event.getEntity().getChunk())){
+                if(shouldcancel(event.getEntity().getChunk(), player)){
                     event.setCancelled(true);
                 }
-                if(projectile.getShooter() instanceof Player player){
-                    if(shouldcancel(event.getEntity().getChunk(), player)){
-                        onEntityDamageByPlayer(event, player);
-                    }
-                }
             }
         }
     }
 
-    @EventHandler
-    private void onEntityDamageByPlayer(EntityDamageByEntityEvent event, Player player) {
-        if(event.getEntity() instanceof Player || event.getEntity() instanceof Monster){
-            event.setCancelled(false);
-            return;
-        }else if(event.getEntity() instanceof Animals || event.getEntity() instanceof Tameable || event.getEntity() instanceof NPC || event.getEntity() instanceof Hanging || event.getEntity() instanceof ArmorStand){
-            if(shouldcancel(event.getEntity().getLocation().getChunk(), player)){
-                event.setCancelled(true);
-                return;
-            }
-        }
-
-        if(claimManager.isTeamClaim(event.getEntity().getChunk())){
-            if(shouldcancel(event.getEntity().getChunk(), player)){
-                event.setCancelled(true);
-            }
-        }
-    }
 
     @EventHandler
     public void onLecternBookEvent(PlayerTakeLecternBookEvent event){
@@ -167,7 +152,7 @@ public class ClaimListener implements Listener {
         if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
             if(shouldcancel(event.getClickedBlock().getChunk(), event.getPlayer())){
                 Material material = event.getClickedBlock().getType();
-                List<Material> protected_materials = Lists.newArrayList(Material.CHEST,Material.TRAPPED_CHEST,Material.BARREL,Material.SHULKER_BOX,Material.WHITE_SHULKER_BOX,Material.ORANGE_SHULKER_BOX,Material.MAGENTA_SHULKER_BOX,Material.LIGHT_BLUE_SHULKER_BOX,Material.YELLOW_SHULKER_BOX,Material.LIME_SHULKER_BOX,Material.PINK_SHULKER_BOX,Material.GRAY_SHULKER_BOX,Material.LIGHT_GRAY_SHULKER_BOX,Material.CYAN_SHULKER_BOX,Material.PURPLE_SHULKER_BOX,Material.BLUE_SHULKER_BOX,Material.BROWN_SHULKER_BOX,Material.GREEN_SHULKER_BOX,Material.RED_SHULKER_BOX,Material.BLACK_SHULKER_BOX,Material.FURNACE,Material.BLAST_FURNACE,Material.SMOKER,Material.BREWING_STAND,Material.DAMAGED_ANVIL,Material.JUKEBOX,Material.HOPPER,Material.DROPPER,Material.DISPENSER,Material.CAULDRON,Material.NOTE_BLOCK,Material.BEACON);
+                List<Material> protected_materials = Lists.newArrayList(Material.CHEST,Material.TRAPPED_CHEST,Material.BARREL,Material.SHULKER_BOX,Material.WHITE_SHULKER_BOX,Material.ORANGE_SHULKER_BOX,Material.MAGENTA_SHULKER_BOX,Material.LIGHT_BLUE_SHULKER_BOX,Material.YELLOW_SHULKER_BOX,Material.LIME_SHULKER_BOX,Material.PINK_SHULKER_BOX,Material.GRAY_SHULKER_BOX,Material.LIGHT_GRAY_SHULKER_BOX,Material.CYAN_SHULKER_BOX,Material.PURPLE_SHULKER_BOX,Material.BLUE_SHULKER_BOX,Material.BROWN_SHULKER_BOX,Material.GREEN_SHULKER_BOX,Material.RED_SHULKER_BOX,Material.BLACK_SHULKER_BOX,Material.FURNACE,Material.BLAST_FURNACE,Material.SMOKER,Material.BREWING_STAND,Material.DAMAGED_ANVIL,Material.JUKEBOX,Material.HOPPER,Material.DROPPER,Material.DISPENSER,Material.CAULDRON,Material.NOTE_BLOCK,Material.BEACON,Material.COMPARATOR,Material.REPEATER,Material.REDSTONE);
 
                 if(protected_materials.contains(material)){
                     event.setCancelled(true);
@@ -256,11 +241,25 @@ public class ClaimListener implements Listener {
             if(shouldcancel(event.getEntity().getChunk(), player)){
                 event.setCancelled(true);
             }
+        }else if (event.getRemover() instanceof Projectile projectile){
+            if(projectile.getShooter() instanceof Player player){
+                if(shouldcancel(event.getEntity().getChunk(), player)){
+                    event.setCancelled(true);
+                }
+            }else{
+                if(claimManager.isClaimed(event.getEntity().getChunk())){
+                    event.setCancelled(true);
+                }
+            }
+        }else if(event.getRemover() instanceof Creeper){
+            if(claimManager.isClaimed(event.getEntity().getChunk())){
+                event.setCancelled(true);
+            }
         }
     }
 
     @EventHandler
-    public void onHangingPLace(HangingPlaceEvent event){
+    public void onHangingPlace(HangingPlaceEvent event){
         if(shouldcancel(event.getEntity().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
@@ -276,14 +275,8 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onEntityBlockBreak(EntityChangeBlockEvent event){
-        if(event.getEntityType().equals(EntityType.ARMOR_STAND)){
-            if(claimManager.isClaimed(event.getBlock().getChunk())){
-                event.setCancelled(true);
-            }
-        }else if(event.getEntityType().equals(EntityType.ITEM_FRAME)){
-            if(claimManager.isClaimed(event.getBlock().getChunk())){
-                event.setCancelled(true);
-            }
+        if(claimManager.isClaimed(event.getEntity().getChunk())){
+            event.setCancelled(true);
         }
     }
 

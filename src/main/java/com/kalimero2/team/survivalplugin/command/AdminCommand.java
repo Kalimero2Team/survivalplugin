@@ -57,18 +57,18 @@ public class AdminCommand extends Command{
 
     private void reload(CommandContext<CommandSender> context){
         plugin.reloadConfig();
-        context.getSender().sendMessage(Component.text("Reloaded Config").color(NamedTextColor.AQUA));
+        context.getSender().sendMessage(Component.text("Reloaded Config"));
     }
 
     private void reloadDatabase(CommandContext<CommandSender> context){
         plugin.getDatabase().getUsers(true);
-        context.getSender().sendMessage(Component.text("Reloaded Database").color(NamedTextColor.AQUA));
+        context.getSender().sendMessage(Component.text("Reloaded Database"));
     }
 
     private void purgeDatabase(CommandContext<CommandSender> context){
         OfflinePlayer player = context.get("player");
         plugin.getDiscordBot().removeDiscordUser(plugin.getDatabase().getUser(player.getUniqueId()));
-        context.getSender().sendMessage(Component.text("Removed User from Database").color(NamedTextColor.AQUA));
+        context.getSender().sendMessage(Component.text("Removed User from Database"));
     }
 
     private void alts(CommandContext<CommandSender> context){
@@ -87,7 +87,7 @@ public class AdminCommand extends Command{
         plugin.saveConfig();
 
         context.getSender().getServer().getOnlinePlayers().forEach(player -> {
-            player.sendPlayerListHeader(MiniMessage.get().parse(headerString));
+            player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(headerString));
         });
     }
 
@@ -98,7 +98,7 @@ public class AdminCommand extends Command{
         plugin.saveConfig();
 
         context.getSender().getServer().getOnlinePlayers().forEach(player -> {
-            player.sendPlayerListFooter(MiniMessage.get().parse(footerString));
+            player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(footerString));
         });
     }
 
@@ -208,39 +208,47 @@ public class AdminCommand extends Command{
         boolean bool = context.get("bool");
         plugin.getConfig().set("portal.end",bool);
         plugin.saveConfig();
+        context.getSender().sendMessage(Component.text("Changed End Portal Status"));
     }
 
     private void setEnableEndGateway(CommandContext<CommandSender> context){
         boolean bool = context.get("bool");
         plugin.getConfig().set("portal.end_gateway",bool);
         plugin.saveConfig();
+        context.getSender().sendMessage(Component.text("Changed End Gateway Status"));
    }
 
     private void setEnableNetherPortal(CommandContext<CommandSender> context){
         boolean bool = context.get("bool");
         plugin.getConfig().set("portal.nether",bool);
         plugin.saveConfig();
+        context.getSender().sendMessage(Component.text("Changed Nether Portal Status"));
     }
 
     private void setMaxPlayers(CommandContext<CommandSender> context){
         int amount = context.get("amount");
         plugin.getServer().setMaxPlayers(amount);
+        context.getSender().sendMessage(Component.text("Changed Max Players to: ").append(Component.text(amount)));
     }
 
     private void maintenanceOn(CommandContext<CommandSender> context){
         String text = context.get("text");
-        plugin.maintenance = MiniMessage.get().parse(text);
+        plugin.maintenance = MiniMessage.miniMessage().deserialize(text);
+        context.getSender().sendMessage(Component.text("Maintenance is now on! Message: ").append(plugin.maintenance));
     }
     private void maintenanceOff(CommandContext<CommandSender> context){
         plugin.maintenance = null;
+        context.getSender().sendMessage(Component.text("Maintenance is now off!"));
     }
 
     private void vipOn(CommandContext<CommandSender> context){
+        context.getSender().sendMessage(Component.text("VIPMode is now on!"));
         plugin.vipOnly = true;
     }
 
     private void vipOff(CommandContext<CommandSender> context){
-        plugin.vipOnly = true;
+        context.getSender().sendMessage(Component.text("VIPMode is now off!"));
+        plugin.vipOnly = false;
     }
 
     private void vipAdd(CommandContext<CommandSender> context){
@@ -248,6 +256,7 @@ public class AdminCommand extends Command{
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
         extraPlayerData.vip = true;
         plugin.claimManager.setExtraPlayerData(player, extraPlayerData);
+        context.getSender().sendMessage(Component.text(player.getName()).append(Component.text(" is now VIP")));
     }
 
     private void vipRemove(CommandContext<CommandSender> context){
@@ -255,6 +264,7 @@ public class AdminCommand extends Command{
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
         extraPlayerData.vip = false;
         plugin.claimManager.setExtraPlayerData(player, extraPlayerData);
+        context.getSender().sendMessage(Component.text(player.getName()).append(Component.text(" is no longer VIP")));
     }
 }
 
