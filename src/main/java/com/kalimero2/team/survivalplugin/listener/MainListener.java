@@ -79,6 +79,10 @@ public class MainListener implements Listener {
             }
         }
 
+        if(player.isDead()){
+            player.spigot().respawn();
+        }
+
         event.joinMessage(joinmessage);
     }
 
