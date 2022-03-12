@@ -80,15 +80,6 @@ public class ClaimManager {
         return true;
     }
 
-    public boolean canModify(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(this.isClaimed(chunk)){
-            if(!this.getOwner(chunk).equals(offlinePlayer)){
-                return this.getTrustedList(chunk).contains(offlinePlayer);
-            }
-        }
-        return true;
-    }
-
     public boolean claimChunk(Chunk chunk, OfflinePlayer offlinePlayer){
         if(!this.isClaimed(chunk)) {
             if (this.canClaim(offlinePlayer)) {
@@ -143,7 +134,7 @@ public class ClaimManager {
     }
 
     public ExtraPlayerData getExtraPlayerData(OfflinePlayer offlinePlayer){
-        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId().toString() + ".json");
+        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId() + ".json");
         if(!file.exists()){
             return new ExtraPlayerData(new HashSet<>(), plugin.getConfig().getInt("claim.max-claims"),false);
         }
@@ -151,7 +142,7 @@ public class ClaimManager {
     }
 
     public void setExtraPlayerData(OfflinePlayer offlinePlayer, ExtraPlayerData extraPlayerData){
-        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId().toString() + ".json");
+        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId() + ".json");
         extraPlayerData.saveData(file.getAbsolutePath());
     }
 

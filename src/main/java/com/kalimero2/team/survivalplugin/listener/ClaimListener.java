@@ -37,30 +37,18 @@ public class ClaimListener implements Listener {
     }
 
     public boolean shouldcancel(Chunk chunk, Player player){
-        long startTime = System.currentTimeMillis();
         ClaimedChunk claimedChunk = claimManager.getClaimedChunk(chunk);
         if(claimManager.isClaimed(chunk) && claimedChunk != null){
             if(claimedChunk.getTeamClaim() != null){
                 if(!claimedChunk.getTrusted().contains(player)){
-                    debugTimes(startTime);
                     return !player.hasPermission("chunk.team");
                 }
             }
             if(!claimedChunk.getOwner().equals(player)){
-                debugTimes(startTime);
                 return !claimedChunk.getTrusted().contains(player);
             }
         }
-        debugTimes(startTime);
         return false;
-    }
-
-    private void debugTimes(long startTime){
-        long endTime = System.currentTimeMillis();
-        long timeElapsed = endTime - startTime;
-        System.out.println(
-                "\n Execution time in milliseconds for Checking if Event should be canceled: "
-                        + timeElapsed + " milliseconds");
     }
 
     private boolean hasSameOwner(Chunk originChunk, Chunk destChunk) {
