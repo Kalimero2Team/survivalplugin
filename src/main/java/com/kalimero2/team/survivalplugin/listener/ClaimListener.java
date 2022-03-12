@@ -2,12 +2,11 @@ package com.kalimero2.team.survivalplugin.listener;
 
 import com.google.common.collect.Lists;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
-import com.kalimero2.team.survivalplugin.util.ClaimManager;
-import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
-import com.kalimero2.team.survivalplugin.util.SerializableChunk;
+import com.kalimero2.team.survivalplugin.util.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -24,29 +23,52 @@ import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
-import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.util.Vector;
 
 import java.util.List;
 
 public class ClaimListener implements Listener {
-    private final ClaimManager claimManager;
+    private final NewClaimManager claimManager;
     private SurvivalPlugin plugin;
 
     public ClaimListener(SurvivalPlugin plugin){
         this.plugin = plugin;
-        this.claimManager = plugin.claimManager;
+        this.claimManager = plugin.newClaimManager;
     }
 
     public boolean shouldcancel(Chunk chunk, Player player){
-        if(claimManager.isClaimed(chunk)){
-            if(claimManager.isTeamClaim(chunk)){
-                if(!claimManager.getTrustedList(chunk).contains(player)){
+        long startTime = System.currentTimeMillis();
+        ClaimedChunk claimedChunk = claimManager.getClaimedChunk(chunk);
+        if(claimManager.isClaimed(chunk) && claimedChunk != null){
+            if(claimedChunk.getTeamClaim() != null){
+                if(!claimedChunk.getTrusted().contains(player)){
+                    debugTimes(startTime);
                     return !player.hasPermission("chunk.team");
                 }
             }
-            if(!claimManager.getOwner(chunk).equals(player)){
-                return !claimManager.getTrustedList(chunk).contains(player);
+            if(!claimedChunk.getOwner().equals(player)){
+                debugTimes(startTime);
+                return !claimedChunk.getTrusted().contains(player);
+            }
+        }
+        debugTimes(startTime);
+        return false;
+    }
+
+    private void debugTimes(long startTime){
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - startTime;
+        System.out.println(
+                "\n Execution time in milliseconds for Checking if Event should be canceled: "
+                        + timeElapsed + " milliseconds");
+    }
+
+    private boolean hasSameOwner(Chunk originChunk, Chunk destChunk) {
+        if(!originChunk.equals(destChunk)){
+            ClaimedChunk origin = claimManager.getClaimedChunk(originChunk);
+            ClaimedChunk dest = claimManager.getClaimedChunk(destChunk);
+            if(origin != null && dest != null){
+                return origin.getOwner().equals(dest.getOwner());
             }
         }
         return false;
@@ -55,24 +77,23 @@ public class ClaimListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event){
         Chunk toChunk = event.getTo().getChunk();
-        if(event.getFrom().getChunk().equals(toChunk)){
+        Chunk fromChunk = event.getFrom().getChunk();
+        if(fromChunk.equals(toChunk)){
             return;
         }
-        if(claimManager.isClaimed(toChunk)){
-
-            if(claimManager.isTeamClaim(toChunk)){
-                Component message = claimManager.getTeamClaimMessage(toChunk);
-                if(claimManager.isTeamClaim(event.getFrom().getChunk())){
-                    if(claimManager.getTeamClaimMessage(event.getFrom().getChunk()).equals(message)){
-                        return;
-                    }
+        ClaimedChunk to = claimManager.getClaimedChunk(toChunk);
+        ClaimedChunk from = claimManager.getClaimedChunk(fromChunk);
+        if(claimManager.isClaimed(toChunk) && to != null && from != null){
+            if(to.getTeamClaim() != null){
+                if(from.getTeamClaim().equals(to.getTeamClaim())){
+                    return;
                 }
-
+                Component message = MiniMessage.miniMessage().deserialize(to.getTeamClaim());
                 event.getPlayer().sendActionBar(message);
                 return;
             }
 
-            String playername = claimManager.getOwner(toChunk).getName();
+            String playername = to.getOwner().getName();
             TextComponent msg = Component.text().content("Grundstücksbesitzer: ").color(NamedTextColor.WHITE).append(Component.text(playername).color(NamedTextColor.GRAY)).build();
             event.getPlayer().sendActionBar(msg);
         }
@@ -103,14 +124,11 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent event){
-        if(event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)){
-            if(claimManager.isTeamClaim(event.getEntity().getChunk())){
+        ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
+        if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
+            if(event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)) {
                 event.setCancelled(true);
-            }
-        }
-
-        if(event.getEntity() instanceof Player player){
-            if(claimManager.isTeamClaim(player.getChunk())){
+            }if(event.getEntity() instanceof Player){
                 if(List.of(EntityDamageEvent.DamageCause.FALL, EntityDamageEvent.DamageCause.MAGIC).contains(event.getCause())){
                     event.setCancelled(true);
                 }
@@ -130,8 +148,8 @@ public class ClaimListener implements Listener {
                     return;
                 }
             }
-
-            if(claimManager.isTeamClaim(event.getEntity().getChunk())){
+            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
+            if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
                 if(shouldcancel(event.getEntity().getChunk(), player)){
                     event.setCancelled(true);
                 }
@@ -175,14 +193,17 @@ public class ClaimListener implements Listener {
                 }
             }
         }
-
-        if(claimManager.isTeamClaim(event.getPlayer().getChunk())){
-            if(shouldcancel(event.getPlayer().getChunk(), event.getPlayer())){
-                if(!event.getAction().equals(Action.RIGHT_CLICK_AIR)){
-                    event.setCancelled(true);
+        if(event.getClickedBlock() != null){
+            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getClickedBlock().getChunk());
+            if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
+                if(shouldcancel(event.getPlayer().getChunk(), event.getPlayer())){
+                    if(!event.getAction().equals(Action.RIGHT_CLICK_AIR)){
+                        event.setCancelled(true);
+                    }
                 }
             }
         }
+
 
     }
 
@@ -286,32 +307,38 @@ public class ClaimListener implements Listener {
 
         Vector vector = event.getDirection().getDirection();
 
-        Chunk originChunk = event.getBlock().getChunk();
-        Chunk destChunk = event.getBlock().getLocation().add(vector).getBlock().getChunk();
-        if(claimManager.isClaimed(destChunk)){
-            if(claimManager.isClaimed(originChunk)){
-                if(!claimManager.getOwner(destChunk).getUniqueId().equals(claimManager.getOwner(originChunk).getUniqueId())){
-                    event.setCancelled(true);
-                }
-            }else {
-                event.setCancelled(true);
-            }
+        ClaimedChunk originChunk = claimManager.getClaimedChunk(event.getBlock().getChunk());
+        ClaimedChunk destChunk = claimManager.getClaimedChunk(event.getBlock().getLocation().add(vector).getBlock().getChunk());
+
+        if(originChunk != null && originChunk.equals(destChunk)){
+            return;
         }
 
-        if(claimManager.isClaimed(event.getBlock().getChunk())){
-            OfflinePlayer owner = claimManager.getOwner(event.getBlock().getChunk());
+        if(destChunk != null && originChunk != null){
+            if(originChunk.getOwner().equals(destChunk.getOwner())){
+                event.setCancelled(true);
+            }
+        }else {
+            event.setCancelled(true);
+        }
+
+
+        if(claimManager.isClaimed(event.getBlock().getChunk()) && originChunk != null){
+            OfflinePlayer owner = originChunk.getOwner();
             for(Block block:blocks){
-                if(claimManager.isClaimed(block.getChunk())){
-                    if(claimManager.getOwner(block.getChunk()) != null){
-                        if(!owner.getUniqueId().equals(claimManager.getOwner(block.getChunk()).getUniqueId())){
+                ClaimedChunk claimedChunk = claimManager.getClaimedChunk(block.getChunk());
+                if(claimManager.isClaimed(block.getChunk()) && claimedChunk != null){
+                    if(claimedChunk.getOwner() != null){
+                        if(!owner.equals(claimedChunk.getOwner())){
                             event.setCancelled(true);
                         }
                     }
                 }
                 Block block1 = block.getLocation().add(vector).getBlock();
-                if(claimManager.isClaimed(block1.getChunk())){
-                    if(claimManager.getOwner(block1.getChunk()) != null){
-                        if(!owner.getUniqueId().equals(claimManager.getOwner(block1.getChunk()).getUniqueId())){
+                ClaimedChunk claimedChunk1 = claimManager.getClaimedChunk(block1.getChunk());
+                if(claimManager.isClaimed(block1.getChunk()) && claimedChunk1 != null){
+                    if(claimedChunk1.getOwner() != null){
+                        if(!owner.equals(claimedChunk1.getOwner())){
                             event.setCancelled(true);
                         }
                     }
@@ -335,12 +362,14 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onBlockPistonRetract(BlockPistonRetractEvent event){
         List<Block> blocks = event.getBlocks();
-        if(claimManager.isClaimed(event.getBlock().getChunk())){
-            OfflinePlayer owner = claimManager.getOwner(event.getBlock().getChunk());
+        ClaimedChunk originChunk = claimManager.getClaimedChunk(event.getBlock().getChunk());
+        if(claimManager.isClaimed(event.getBlock().getChunk()) && originChunk != null){
+            OfflinePlayer owner = originChunk.getOwner();
             for(Block block:blocks){
-                if(claimManager.isClaimed(block.getChunk())){
-                    if(claimManager.getOwner(block.getChunk()) != null){
-                        if(!owner.getUniqueId().equals(claimManager.getOwner(block.getChunk()).getUniqueId())){
+                ClaimedChunk claimedChunk = claimManager.getClaimedChunk(block.getChunk());
+                if(claimManager.isClaimed(block.getChunk()) && claimedChunk != null){
+                    if(claimedChunk.getOwner() != null){
+                        if(!owner.equals(claimedChunk.getOwner())){
                             event.setCancelled(true);
                         }
                     }
@@ -355,28 +384,13 @@ public class ClaimListener implements Listener {
         }
     }
 
-
     @EventHandler
     public void onBlockFromTo(BlockFromToEvent event){
-        Chunk from_chunk = event.getBlock().getChunk();
-        Chunk to_chunk = event.getToBlock().getChunk();
-
-        if(from_chunk.equals(to_chunk)){
-            return;
-        }
-
-        if(claimManager.isClaimed(from_chunk)){
-            if(claimManager.isClaimed(to_chunk)){
-                if(!claimManager.getOwner(from_chunk).getUniqueId().equals(claimManager.getOwner(to_chunk).getUniqueId())){
-                    event.setCancelled(true);
-                }
-            }
-        }else {
-            if(claimManager.isClaimed(to_chunk)){
-                event.setCancelled(true);
-            }
+        if(!hasSameOwner(event.getToBlock().getChunk(),event.getBlock().getChunk())){
+            event.setCancelled(true);
         }
     }
+
     @EventHandler
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
         if(event.getEntity().getType() == EntityType.ENDERMAN){
@@ -402,33 +416,19 @@ public class ClaimListener implements Listener {
             Chunk originChunk = event.getBlock().getChunk();
             Chunk destChunk = event.getBlock().getLocation().add(directional.getFacing().getDirection()).getChunk();
 
-            if(hasSameOwner(originChunk, destChunk)){
+            if(!hasSameOwner(originChunk, destChunk)){
                 event.setCancelled(true);
             }
         }
     }
 
-    private boolean hasSameOwner(Chunk originChunk, Chunk destChunk) {
-        if(!originChunk.equals(destChunk)){
-            if(claimManager.isClaimed(destChunk)){
-                if(claimManager.isClaimed(originChunk)){
-                    if(!claimManager.getOwner(destChunk).getUniqueId().equals(claimManager.getOwner(originChunk).getUniqueId())){
-                        return true;
-                    }
-                }else {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 
     @EventHandler
     public void onBlockSpread(BlockSpreadEvent event){
         Chunk originChunk = event.getSource().getChunk();
         Chunk destChunk = event.getBlock().getChunk();
 
-        if(hasSameOwner(originChunk, destChunk)){
+        if(!hasSameOwner(originChunk, destChunk)){
             event.setCancelled(true);
         }
     }
@@ -440,25 +440,11 @@ public class ClaimListener implements Listener {
         for(BlockState block:event.getBlocks()){
             Chunk destChunk = block.getChunk();
 
-            if(hasSameOwner(originChunk, destChunk)){
+            if(!hasSameOwner(originChunk, destChunk)){
                 event.setCancelled(true);
             }
         }
     }
 
-
-    @EventHandler(priority = EventPriority.MONITOR,ignoreCancelled = true)
-    public void onChunkLoad(ChunkLoadEvent event){
-        if(claimManager.isClaimed(event.getChunk())){
-            OfflinePlayer chunkOwner = claimManager.getOwner(event.getChunk());
-            ExtraPlayerData extraPlayerData = claimManager.getExtraPlayerData(chunkOwner);
-            SerializableChunk serializableChunk = claimManager.getSerializableChunk(event.getChunk());
-            if(!extraPlayerData.chunks.contains(serializableChunk)){
-                plugin.getLogger().warning("Missing Claimed Chunk added to PlayerData. Chunk: "+serializableChunk.toString()+ " Chunk Owner: "+ chunkOwner.getName());
-                extraPlayerData.chunks.add(serializableChunk);
-                claimManager.setExtraPlayerData(chunkOwner, extraPlayerData);
-            }
-        }
-    }
 
 }

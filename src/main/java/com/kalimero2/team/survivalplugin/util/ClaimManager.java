@@ -48,7 +48,6 @@ public class ClaimManager {
             List<OfflinePlayer> list =  Arrays.stream(chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)).toList();
             trustList = new ArrayList<>(list); // http://stackoverflow.com/questions/5755477/ddg#5755510
         }
-
         return trustList;
     }
 

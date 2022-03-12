@@ -32,6 +32,7 @@ public final class SurvivalPlugin extends JavaPlugin {
     public MessageUtil messageUtil;
     public IntroductionUtil introductionUtil;
     public ClaimManager claimManager;
+    public NewClaimManager newClaimManager;
     public File playerDataFolder;
     public Map<String, MinecraftUser> codeIdMap = new HashMap<>();
 
@@ -72,6 +73,7 @@ public final class SurvivalPlugin extends JavaPlugin {
         motd = this.getServer().motd();
 
         claimManager = new ClaimManager(plugin);
+        newClaimManager = new NewClaimManager(plugin);
         plugin.getLogger().info("Loaded ClaimManager");
 
         plugin.getServer().getPluginManager().registerEvents(new MainListener(plugin), plugin);
