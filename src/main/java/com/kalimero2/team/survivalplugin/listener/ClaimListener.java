@@ -127,20 +127,36 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event){
         if(event.getDamager() instanceof Player player){
-            if(event.getEntity() instanceof Player || event.getEntity() instanceof Monster){
-                event.setCancelled(false);
-                return;
-            }else if(event.getEntity() instanceof Animals || event.getEntity() instanceof Tameable || event.getEntity() instanceof NPC || event.getEntity() instanceof Hanging || event.getEntity() instanceof ArmorStand){
-                if(shouldcancel(event.getEntity().getLocation().getChunk(), player)){
+            onEntityDamageByPlayer(event, player);
+        }else{
+            if(event.getDamager() instanceof Projectile projectile){
+                if(event.getEntity() instanceof Hanging){
                     event.setCancelled(true);
-                    return;
+                }
+                if(projectile.getShooter() instanceof Player player){
+                    if(shouldcancel(event.getEntity().getChunk(), player)){
+                        onEntityDamageByPlayer(event, player);
+                    }
                 }
             }
-            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
-            if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
-                if(shouldcancel(event.getEntity().getChunk(), player)){
-                    event.setCancelled(true);
-                }
+        }
+    }
+
+    private void onEntityDamageByPlayer(EntityDamageByEntityEvent event, Player player) {
+        if(event.getEntity() instanceof Player || event.getEntity() instanceof Monster){
+            event.setCancelled(false);
+            return;
+        }else if(event.getEntity() instanceof Animals || event.getEntity() instanceof Tameable || event.getEntity() instanceof NPC || event.getEntity() instanceof Hanging || event.getEntity() instanceof ArmorStand){
+            if(shouldcancel(event.getEntity().getLocation().getChunk(), player)){
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
+        if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
+            if(shouldcancel(event.getEntity().getChunk(), player)){
+                event.setCancelled(true);
             }
         }
     }
