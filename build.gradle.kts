@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.kalimero2.team.survivalplugin"
-version = "2.5"
+version = "2.6-SNAPSHOT"
 
 repositories {
     mavenCentral()
