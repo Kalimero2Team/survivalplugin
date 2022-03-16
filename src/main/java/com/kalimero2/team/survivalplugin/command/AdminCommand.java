@@ -9,6 +9,7 @@ import cloud.commandframework.bukkit.parsers.location.Location2DArgument;
 import cloud.commandframework.context.CommandContext;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import com.kalimero2.team.survivalplugin.util.ClaimManager;
+import com.kalimero2.team.survivalplugin.util.ClaimedChunk;
 import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
 import com.kalimero2.team.survivalplugin.util.SerializableChunk;
 import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
@@ -135,7 +136,7 @@ public class AdminCommand extends Command{
             extraPlayerData.maxclaims = updated;
             plugin.claimManager.setExtraPlayerData(player,extraPlayerData);
 
-            claimManager.teamClaimChunk(chunk ,player, context.get("message"));
+            //claimManager.teamClaimChunk(chunk ,player, context.get("message"));
             plugin.messageUtil.sendMessage(player,"message.command.chunk.claim_success");
 
         }
@@ -145,10 +146,10 @@ public class AdminCommand extends Command{
         if(context.getSender() instanceof Player player) {
             Chunk chunk = player.getLocation().getChunk();
 
-            if(plugin.claimManager.isTeamClaim(chunk)){
+            /*if(plugin.claimManager.isTeamClaim(chunk)){
                 plugin.claimManager.forceUnClaimChunk(chunk);
                 plugin.messageUtil.sendMessage(player,"message.command.chunk.unclaim_force_success");
-            }
+            }*/
 
         }
     }
@@ -158,11 +159,11 @@ public class AdminCommand extends Command{
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
 
         for(SerializableChunk chunk: extraPlayerData.chunks){
-            Chunk bukkit_chunk =  plugin.claimManager.getChunk(chunk);
-            if(plugin.claimManager.getOwner(bukkit_chunk) == null)
-                context.getSender().sendMessage("Wrong Player owns this Chunk");
-            else if(plugin.claimManager.getOwner(bukkit_chunk).equals(player)){
-                plugin.claimManager.forceUnClaimChunk(bukkit_chunk);
+            ClaimedChunk claimedChunk =  plugin.claimManager.getClaimedChunk(plugin.claimManager.getChunk(chunk));
+            if(claimedChunk.getOwner() == null)
+                context.getSender().sendMessage("No Owner");
+            else if(claimedChunk.getOwner().equals(player)){
+                plugin.claimManager.forceUnClaimChunk(claimedChunk);
                 context.getSender().sendMessage("Unclaimed Chunk. "+chunk.x +" "+ chunk.z);
             }else {
                 context.getSender().sendMessage("Wrong Player owns this Chunk");
@@ -183,18 +184,18 @@ public class AdminCommand extends Command{
         sender.sendMessage(maxplayers);
         sender.sendMessage("Claims: ");
         for(SerializableChunk chunk: extraPlayerData.chunks){
-            Chunk bukkitchunk = plugin.claimManager.getChunk(chunk);
-            Component location = Component.text("   World: "+bukkitchunk.getWorld().getName()+ " X:"+chunk.x+" Z"+chunk.z);
+            ClaimedChunk claimedChunk = plugin.claimManager.getClaimedChunk(plugin.claimManager.getChunk(chunk));
+            Component location = Component.text("   World: "+claimedChunk.getChunk().getWorld().getName()+ " X:"+chunk.x+" Z"+chunk.z);
             location = location.hoverEvent(HoverEvent.showText(Component.text("Click to TP")));
             location = location.clickEvent(ClickEvent.runCommand("/admin tpchunk "+ chunk.x + " "+ chunk.z));
             sender.sendMessage(location);
-            if(plugin.claimManager.getOwner(plugin.claimManager.getChunk(chunk)) != null){
-                sender.sendMessage("   Owner: "+ plugin.claimManager.getOwner(plugin.claimManager.getChunk(chunk)).getName());
+            if(claimedChunk.getOwner() != null){
+                sender.sendMessage("   Owner: "+ claimedChunk.getOwner());
             }else {
                 sender.sendMessage("   Owner: (NOT FOUND)");
             }
 
-            List<OfflinePlayer> trustedPlayers = plugin.claimManager.getTrustedList(plugin.claimManager.getChunk(chunk));
+            List<OfflinePlayer> trustedPlayers = claimedChunk.getTrusted();
             if(trustedPlayers.size() >= 1){
                 sender.sendMessage("   Trusted: ");
                 for(OfflinePlayer trusted: trustedPlayers){

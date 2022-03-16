@@ -28,23 +28,23 @@ import org.bukkit.util.Vector;
 import java.util.List;
 
 public class ClaimListener implements Listener {
-    private final NewClaimManager claimManager;
+    private final ClaimManager claimManager;
     private SurvivalPlugin plugin;
 
     public ClaimListener(SurvivalPlugin plugin){
         this.plugin = plugin;
-        this.claimManager = plugin.newClaimManager;
+        this.claimManager = plugin.claimManager;
     }
 
-    public boolean shouldcancel(Chunk chunk, Player player){
+    public boolean shouldCancel(Chunk chunk, Player player){
         ClaimedChunk claimedChunk = claimManager.getClaimedChunk(chunk);
-        if(claimManager.isClaimed(chunk) && claimedChunk != null){
+        if(claimedChunk.isClaimed()){
             if(claimedChunk.getTeamClaim() != null){
                 if(!claimedChunk.getTrusted().contains(player)){
                     return !player.hasPermission("chunk.team");
                 }
             }
-            if(!claimedChunk.getOwner().equals(player)){
+            if(claimedChunk.getOwner() != null && !claimedChunk.getOwner().equals(player)){
                 return !claimedChunk.getTrusted().contains(player);
             }
         }
@@ -55,9 +55,11 @@ public class ClaimListener implements Listener {
         if(!originChunk.equals(destChunk)){
             ClaimedChunk origin = claimManager.getClaimedChunk(originChunk);
             ClaimedChunk dest = claimManager.getClaimedChunk(destChunk);
-            if(origin != null && dest != null){
+
+            if(origin.getOwner() != null && dest.getOwner() != null){
                 return origin.getOwner().equals(dest.getOwner());
             }
+            return (!origin.isClaimed() && !dest.isClaimed());
         }
         return false;
     }
@@ -71,8 +73,8 @@ public class ClaimListener implements Listener {
         }
         ClaimedChunk to = claimManager.getClaimedChunk(toChunk);
         ClaimedChunk from = claimManager.getClaimedChunk(fromChunk);
-        if(claimManager.isClaimed(toChunk) && to != null && from != null){
-            if(to.getTeamClaim() != null){
+        if(to.isClaimed()){
+            if(to.getTeamClaim() != null && from.getTeamClaim() != null){
                 if(from.getTeamClaim().equals(to.getTeamClaim())){
                     return;
                 }
@@ -81,16 +83,18 @@ public class ClaimListener implements Listener {
                 return;
             }
 
-            String playername = to.getOwner().getName();
-            TextComponent msg = Component.text().content("Grundstücksbesitzer: ").color(NamedTextColor.WHITE).append(Component.text(playername).color(NamedTextColor.GRAY)).build();
-            event.getPlayer().sendActionBar(msg);
+            if(to.getOwner() != null){
+                String playername = to.getOwner().getName();
+                TextComponent msg = Component.text().content("Grundstücksbesitzer: ").color(NamedTextColor.WHITE).append(Component.text(playername).color(NamedTextColor.GRAY)).build();
+                event.getPlayer().sendActionBar(msg);
+            }
         }
         
     }
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event){
-        if(shouldcancel(event.getBlock().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getBlock().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -98,14 +102,14 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent event){
-        if(shouldcancel(event.getBlock().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getBlock().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
     
     @EventHandler
     public void onPlayerBucketFishEvent(PlayerBucketEntityEvent event){
-        if(shouldcancel(event.getEntity().getLocation().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getEntity().getLocation().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -134,7 +138,7 @@ public class ClaimListener implements Listener {
                     event.setCancelled(true);
                 }
                 if(projectile.getShooter() instanceof Player player){
-                    if(shouldcancel(event.getEntity().getChunk(), player)){
+                    if(shouldCancel(event.getEntity().getChunk(), player)){
                         onEntityDamageByPlayer(event, player);
                     }
                 }
@@ -147,15 +151,15 @@ public class ClaimListener implements Listener {
             event.setCancelled(false);
             return;
         }else if(event.getEntity() instanceof Animals || event.getEntity() instanceof Tameable || event.getEntity() instanceof NPC || event.getEntity() instanceof Hanging || event.getEntity() instanceof ArmorStand){
-            if(shouldcancel(event.getEntity().getLocation().getChunk(), player)){
+            if(shouldCancel(event.getEntity().getLocation().getChunk(), player)){
                 event.setCancelled(true);
                 return;
             }
         }
 
         ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
-        if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
-            if(shouldcancel(event.getEntity().getChunk(), player)){
+        if(claimedChunk.getTeamClaim() != null){
+            if(shouldCancel(event.getEntity().getChunk(), player)){
                 event.setCancelled(true);
             }
         }
@@ -164,7 +168,7 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onLecternBookEvent(PlayerTakeLecternBookEvent event){
-        if(shouldcancel(event.getLectern().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getLectern().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -172,7 +176,7 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onInteractEvent(PlayerInteractEvent event){
         if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
-            if(shouldcancel(event.getClickedBlock().getChunk(), event.getPlayer())){
+            if(event.getClickedBlock() != null && shouldCancel(event.getClickedBlock().getChunk(), event.getPlayer())){
                 Material material = event.getClickedBlock().getType();
                 List<Material> protected_materials = Lists.newArrayList(Material.CHEST,Material.TRAPPED_CHEST,Material.BARREL,Material.SHULKER_BOX,Material.WHITE_SHULKER_BOX,Material.ORANGE_SHULKER_BOX,Material.MAGENTA_SHULKER_BOX,Material.LIGHT_BLUE_SHULKER_BOX,Material.YELLOW_SHULKER_BOX,Material.LIME_SHULKER_BOX,Material.PINK_SHULKER_BOX,Material.GRAY_SHULKER_BOX,Material.LIGHT_GRAY_SHULKER_BOX,Material.CYAN_SHULKER_BOX,Material.PURPLE_SHULKER_BOX,Material.BLUE_SHULKER_BOX,Material.BROWN_SHULKER_BOX,Material.GREEN_SHULKER_BOX,Material.RED_SHULKER_BOX,Material.BLACK_SHULKER_BOX,Material.FURNACE,Material.BLAST_FURNACE,Material.SMOKER,Material.BREWING_STAND,Material.DAMAGED_ANVIL,Material.JUKEBOX,Material.HOPPER,Material.DROPPER,Material.DISPENSER,Material.CAULDRON,Material.NOTE_BLOCK,Material.BEACON,Material.COMPARATOR,Material.REPEATER,Material.REDSTONE);
 
@@ -188,19 +192,18 @@ public class ClaimListener implements Listener {
                 }
             }
         }else if(event.getAction().equals(Action.PHYSICAL)){
-            if(event.getClickedBlock() != null){
-                if(event.getClickedBlock().getType().equals(Material.FARMLAND)){
-                    if(shouldcancel(event.getClickedBlock().getChunk(), event.getPlayer())){
-                        event.setCancelled(true);
-                        return;
-                    }
+            if(event.getClickedBlock() != null && event.getClickedBlock().getType().equals(Material.FARMLAND)){
+                if(shouldCancel(event.getClickedBlock().getChunk(), event.getPlayer())){
+                    event.setCancelled(true);
+                    return;
                 }
             }
         }
+
         if(event.getClickedBlock() != null){
             ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getClickedBlock().getChunk());
             if(claimedChunk != null && claimedChunk.getTeamClaim() != null){
-                if(shouldcancel(event.getPlayer().getChunk(), event.getPlayer())){
+                if(shouldCancel(event.getPlayer().getChunk(), event.getPlayer())){
                     if(!event.getAction().equals(Action.RIGHT_CLICK_AIR)){
                         event.setCancelled(true);
                     }
@@ -219,7 +222,7 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onTeleport(PlayerTeleportEvent event) {
         if(event.getCause().equals(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT)){
-            if(shouldcancel(event.getTo().getChunk(), event.getPlayer())){
+            if(shouldCancel(event.getTo().getChunk(), event.getPlayer())){
                 event.setCancelled(true);
             }
         }
@@ -230,7 +233,7 @@ public class ClaimListener implements Listener {
         Player player = breakEvent.getPlayer();
         Block block = breakEvent.getBlock();
 
-        if(shouldcancel(block.getChunk(), player)){
+        if(shouldCancel(block.getChunk(), player)){
             breakEvent.setCancelled(true);
         }
     }
@@ -239,7 +242,7 @@ public class ClaimListener implements Listener {
     public void onBlocksPlace(BlockMultiPlaceEvent placeEvent) {
         Player player = placeEvent.getPlayer();
         for(BlockState blockState:placeEvent.getReplacedBlockStates()){
-            if(shouldcancel(blockState.getChunk(), player)){
+            if(shouldCancel(blockState.getChunk(), player)){
                 placeEvent.setCancelled(true);
             }
         }
@@ -249,7 +252,7 @@ public class ClaimListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent placeEvent) {
         Player player = placeEvent.getPlayer();
         Block block = placeEvent.getBlock();
-        if(shouldcancel(block.getChunk(), player)){
+        if(shouldCancel(block.getChunk(), player)){
             placeEvent.setCancelled(true);
         }
 
@@ -262,22 +265,23 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onHangingBreak(HangingBreakByEntityEvent event){
+        ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
         if(event.getRemover() instanceof Player player){
-            if(shouldcancel(event.getEntity().getChunk(), player)){
+            if(shouldCancel(event.getEntity().getChunk(), player)){
                 event.setCancelled(true);
             }
         }else if (event.getRemover() instanceof Projectile projectile){
             if(projectile.getShooter() instanceof Player player){
-                if(shouldcancel(event.getEntity().getChunk(), player)){
+                if(shouldCancel(event.getEntity().getChunk(), player)){
                     event.setCancelled(true);
                 }
             }else{
-                if(claimManager.isClaimed(event.getEntity().getChunk())){
+                if(claimedChunk.isClaimed()){
                     event.setCancelled(true);
                 }
             }
         }else if(event.getRemover() instanceof Creeper){
-            if(claimManager.isClaimed(event.getEntity().getChunk())){
+            if(claimedChunk.isClaimed()){
                 event.setCancelled(true);
             }
         }
@@ -285,14 +289,14 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onHangingPlace(HangingPlaceEvent event){
-        if(shouldcancel(event.getEntity().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getEntity().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event){
-        if(shouldcancel(event.getRightClicked().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getRightClicked().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -300,7 +304,8 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onEntityBlockBreak(EntityChangeBlockEvent event){
-        if(claimManager.isClaimed(event.getEntity().getChunk())){
+        ClaimedChunk claimedChunk = claimManager.getClaimedChunk(event.getEntity().getChunk());
+        if(claimedChunk.isClaimed()){
             event.setCancelled(true);
         }
     }
@@ -314,24 +319,19 @@ public class ClaimListener implements Listener {
         ClaimedChunk originChunk = claimManager.getClaimedChunk(event.getBlock().getChunk());
         ClaimedChunk destChunk = claimManager.getClaimedChunk(event.getBlock().getLocation().add(vector).getBlock().getChunk());
 
-        if(originChunk != null && originChunk.equals(destChunk)){
+        if(originChunk.equals(destChunk)){
             return;
         }
 
-        if(destChunk != null && originChunk != null){
-            if(originChunk.getOwner().equals(destChunk.getOwner())){
-                event.setCancelled(true);
-            }
-        }else {
+        if(!hasSameOwner(originChunk.getChunk(), destChunk.getChunk())){
             event.setCancelled(true);
         }
 
-
-        if(claimManager.isClaimed(event.getBlock().getChunk()) && originChunk != null){
+        if(originChunk.isClaimed() && originChunk.getOwner() != null){
             OfflinePlayer owner = originChunk.getOwner();
             for(Block block:blocks){
                 ClaimedChunk claimedChunk = claimManager.getClaimedChunk(block.getChunk());
-                if(claimManager.isClaimed(block.getChunk()) && claimedChunk != null){
+                if(claimedChunk.isClaimed()){
                     if(claimedChunk.getOwner() != null){
                         if(!owner.equals(claimedChunk.getOwner())){
                             event.setCancelled(true);
@@ -340,7 +340,7 @@ public class ClaimListener implements Listener {
                 }
                 Block block1 = block.getLocation().add(vector).getBlock();
                 ClaimedChunk claimedChunk1 = claimManager.getClaimedChunk(block1.getChunk());
-                if(claimManager.isClaimed(block1.getChunk()) && claimedChunk1 != null){
+                if(claimedChunk1.isClaimed()){
                     if(claimedChunk1.getOwner() != null){
                         if(!owner.equals(claimedChunk1.getOwner())){
                             event.setCancelled(true);
@@ -350,12 +350,11 @@ public class ClaimListener implements Listener {
             }
         }else {
             for(Block block: blocks){
-                if(claimManager.isClaimed(block.getChunk())){
+                if(claimManager.getClaimedChunk(block.getChunk()).isClaimed()){
                     event.setCancelled(true);
                 }
                 Block block1 = block.getLocation().add(vector).getBlock();
-
-                if(claimManager.isClaimed(block1.getChunk())){
+                if(claimManager.getClaimedChunk(block1.getChunk()).isClaimed()){
                     event.setCancelled(true);
                 }
             }
@@ -367,11 +366,11 @@ public class ClaimListener implements Listener {
     public void onBlockPistonRetract(BlockPistonRetractEvent event){
         List<Block> blocks = event.getBlocks();
         ClaimedChunk originChunk = claimManager.getClaimedChunk(event.getBlock().getChunk());
-        if(claimManager.isClaimed(event.getBlock().getChunk()) && originChunk != null){
+        if(originChunk.isClaimed() && originChunk.getOwner() != null){
             OfflinePlayer owner = originChunk.getOwner();
             for(Block block:blocks){
                 ClaimedChunk claimedChunk = claimManager.getClaimedChunk(block.getChunk());
-                if(claimManager.isClaimed(block.getChunk()) && claimedChunk != null){
+                if(claimedChunk.isClaimed()){
                     if(claimedChunk.getOwner() != null){
                         if(!owner.equals(claimedChunk.getOwner())){
                             event.setCancelled(true);
@@ -381,7 +380,7 @@ public class ClaimListener implements Listener {
             }
         }else {
             for(Block block: blocks){
-                if(claimManager.isClaimed(block.getChunk())){
+                if(claimManager.getClaimedChunk(block.getChunk()).isClaimed()){
                     event.setCancelled(true);
                 }
             }
@@ -400,7 +399,7 @@ public class ClaimListener implements Listener {
         if(event.getEntity().getType() == EntityType.ENDERMAN){
             event.setCancelled(true);
         }else if(event.getEntity().getType() == EntityType.BOAT){
-            if(claimManager.isClaimed(event.getBlock().getChunk())){
+            if(claimManager.getClaimedChunk(event.getBlock().getChunk()).isClaimed()){
                 event.setCancelled(true);
             }
         }
@@ -409,7 +408,7 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onEntityInteract(EntityInteractEvent event){
-        if(claimManager.isClaimed(event.getBlock().getChunk())){
+        if(claimManager.getClaimedChunk(event.getBlock().getChunk()).isClaimed()){
             event.setCancelled(true);
         }
     }

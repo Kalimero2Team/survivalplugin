@@ -3,10 +3,7 @@ package com.kalimero2.team.survivalplugin.command;
 import cloud.commandframework.bukkit.parsers.OfflinePlayerArgument;
 import cloud.commandframework.context.CommandContext;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
-import com.kalimero2.team.survivalplugin.util.ClaimManager;
-import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
-import com.kalimero2.team.survivalplugin.util.MessageUtil;
-import com.kalimero2.team.survivalplugin.util.ChunkBorders;
+import com.kalimero2.team.survivalplugin.util.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -54,20 +51,20 @@ public class ChunkCommand extends Command{
 
     private void info(CommandContext<CommandSender> context) {
         if(context.getSender() instanceof Player player){
-            Chunk chunk = player.getLocation().getChunk();
+            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(player.getLocation().getChunk());
 
-            messageUtil.sendMessage(player,"message.command.chunk.info", Placeholder.component("chunk_x", Component.text(chunk.getX())), Placeholder.component("chunk_z", Component.text(chunk.getZ())));
+            messageUtil.sendMessage(player,"message.command.chunk.info", Placeholder.component("chunk_x", Component.text(claimedChunk.getChunk().getX())), Placeholder.component("chunk_z", Component.text(claimedChunk.getChunk().getZ())));
 
-            if(claimManager.isClaimed(chunk)){
+            if(claimedChunk.isClaimed()){
                 messageUtil.sendMessage(player, "message.command.chunk.claimed_true");
 
-                if(claimManager.isTeamClaim(chunk)){
+                if(claimedChunk.getTeamClaim() != null){
                     messageUtil.sendMessage(player, "message.command.chunk.team_chunk");
-                }else {
-                    messageUtil.sendMessage(player, "message.command.chunk.claim_owner", Placeholder.unparsed("player", Objects.requireNonNullElse(claimManager.getOwner(chunk).getName(),"player")));
+                }else if(claimedChunk.getOwner() != null){
+                    messageUtil.sendMessage(player, "message.command.chunk.claim_owner", Placeholder.unparsed("player", Objects.requireNonNullElse(claimedChunk.getOwner().getName(),"player")));
                 }
 
-                List<OfflinePlayer> trustedPlayers = claimManager.getTrustedList(chunk);
+                List<OfflinePlayer> trustedPlayers = claimedChunk.getTrusted();
                 if(trustedPlayers.size() >= 1){
                     messageUtil.sendMessage(player, "message.command.chunk.claim_trusted_start");
                     for(OfflinePlayer trustedPlayer:trustedPlayers){
@@ -82,14 +79,13 @@ public class ChunkCommand extends Command{
 
     private void add(CommandContext<CommandSender> context){
         if(context.getSender() instanceof Player player) {
-            Chunk chunk = player.getLocation().getChunk();
+            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(player.getLocation().getChunk());
             OfflinePlayer target = context.get("player");
             TagResolver.Single target_placeholder = Placeholder.unparsed("player", Objects.requireNonNullElse(target.getName(),"target_name"));
 
-            if (claimManager.isClaimed(chunk)) {
-                if(claimManager.getOwner(player.getLocation().getChunk()).equals(player) || forcedOwner.contains(player.getUniqueId())){
-                    if(!claimManager.getTrustedList(chunk).contains(target)){
-                        claimManager.trust(chunk,target);
+            if (claimedChunk.isClaimed() && claimedChunk.getOwner() != null) {
+                if(claimedChunk.getOwner().equals(player) || forcedOwner.contains(player.getUniqueId())){
+                    if(claimManager.trust(claimedChunk,target)){
                         messageUtil.sendMessage(player,"message.command.chunk.claim_add_success", target_placeholder);
                     }else {
                         messageUtil.sendMessage(player,"message.command.chunk.claim_add_fail_already_added", target_placeholder);
@@ -106,14 +102,13 @@ public class ChunkCommand extends Command{
 
     private void remove(CommandContext<CommandSender> context){
         if(context.getSender() instanceof Player player) {
-            Chunk chunk = player.getLocation().getChunk();
+            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(player.getLocation().getChunk());
             OfflinePlayer target = context.get("player");
             TagResolver.Single target_placeholder = Placeholder.unparsed("player", Objects.requireNonNullElse(target.getName(),"target_name"));
 
-            if (claimManager.isClaimed(chunk)) {
-                if(claimManager.getOwner(player.getLocation().getChunk()).equals(player) || forcedOwner.contains(player.getUniqueId())){
-                    if(claimManager.getTrustedList(chunk).contains(target)){
-                        claimManager.unTrust(chunk,target);
+            if (claimedChunk.isClaimed() && claimedChunk.getOwner() != null) {
+                if(claimedChunk.getOwner().equals(player) || forcedOwner.contains(player.getUniqueId())){
+                    if(claimManager.unTrust(claimedChunk,target)){
                         messageUtil.sendMessage(player,"message.command.chunk.claim_remove_success",target_placeholder);
                     }else {
                         messageUtil.sendMessage(player,"message.command.chunk.claim_remove_fail_already_removed",target_placeholder);
@@ -154,18 +149,18 @@ public class ChunkCommand extends Command{
 
     private void unClaim(CommandContext<CommandSender> context){
         if(context.getSender() instanceof Player player) {
-            Chunk chunk = player.getLocation().getChunk();
+            ClaimedChunk claimedChunk = claimManager.getClaimedChunk(player.getLocation().getChunk());
 
-            if(claimManager.isTeamClaim(chunk)){
+            if(claimedChunk.getTeamClaim() != null){
                 messageUtil.sendMessage(player,"message.command.chunk.unclaim_fail_team_claim");
                 return;
             }
 
-            if(claimManager.unClaimChunk(chunk,player)){
+            if(claimManager.unClaimChunk(claimedChunk,player)){
                 messageUtil.sendMessage(player,"message.command.chunk.unclaim_success");
             }else{
                 if(forcedOwner.contains(player.getUniqueId())){
-                    claimManager.forceUnClaimChunk(chunk);
+                    claimManager.forceUnClaimChunk(claimedChunk);
                     messageUtil.sendMessage(player,"message.command.chunk.unclaim_force_success");
                 }else {
                     messageUtil.sendMessage(player,"message.command.chunk.unclaim_fail_not_claimed");

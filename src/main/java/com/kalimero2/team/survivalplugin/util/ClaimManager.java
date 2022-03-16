@@ -1,129 +1,114 @@
 package com.kalimero2.team.survivalplugin.util;
 
-import de.jeff_media.morepersistentdatatypes.DataType;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import de.jeff_media.morepersistentdatatypes.DataType;
 import org.bukkit.Chunk;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.util.*;
 
-public class ClaimManager {
+public class ClaimManager implements Listener {
 
-    public NamespacedKey owner_key;
-    public NamespacedKey trusted_key;
-    public NamespacedKey teamclaim_key;
-    private SurvivalPlugin plugin;
+    private final NamespacedKey owner_key;
+    private final NamespacedKey trusted_key;
+    private final NamespacedKey teamclaim_key;
+    private final SurvivalPlugin plugin;
+    private final HashMap<Chunk, ClaimedChunk> chunkHashMap;
 
     public ClaimManager(SurvivalPlugin plugin){
         this.plugin = plugin;
         owner_key = new NamespacedKey(plugin, "owner");
         trusted_key = new NamespacedKey(plugin, "trusted");
         teamclaim_key = new NamespacedKey(plugin, "teamclaim");
+        chunkHashMap = new HashMap<>();
+        plugin.getServer().getPluginManager().registerEvents(this,plugin);
     }
 
-    public boolean isClaimed(Chunk chunk){
-        return chunk.getPersistentDataContainer().has(owner_key, PersistentDataType.STRING);
+    public ClaimedChunk getClaimedChunk(Chunk chunk){
+        return getClaimedChunk(chunk, false);
     }
 
-    public boolean isTeamClaim(Chunk chunk){
-        return chunk.getPersistentDataContainer().has(teamclaim_key, PersistentDataType.STRING);
-    }
+    public ClaimedChunk getClaimedChunk(Chunk chunk, boolean force){
+        if(chunkHashMap.containsKey(chunk) && !force){
+            return chunkHashMap.get(chunk);
+        }else {
+            if(chunk.getPersistentDataContainer().has(owner_key)){
+                String ownerString = chunk.getPersistentDataContainer().get(owner_key, PersistentDataType.STRING);
+                if(ownerString != null){
+                    OfflinePlayer owner = plugin.getServer().getOfflinePlayer(UUID.fromString(ownerString));
 
-    public OfflinePlayer getOwner(Chunk chunk){
-        String string = chunk.getPersistentDataContainer().get(owner_key, PersistentDataType.STRING);
-        if(string != null){
-            return plugin.getServer().getOfflinePlayer(UUID.fromString(string));
+                    if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
+                        List<OfflinePlayer> trusted =  Arrays.stream(chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)).toList();
+                        String teamClaim = chunk.getPersistentDataContainer().get(teamclaim_key, PersistentDataType.STRING);
+                        ClaimedChunk claimedChunk = new ClaimedChunk(chunk, owner, new ArrayList<>(trusted), teamClaim);
+                        chunkHashMap.put(chunk, claimedChunk);
+                        return claimedChunk;
+                    }
+                }
+            }
         }
-        return null;
+        return new ClaimedChunk(chunk, null, null,null);
     }
 
-    public List<OfflinePlayer> getTrustedList(Chunk chunk){
-        List<OfflinePlayer> trustList = new ArrayList<>();
-        if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
-            List<OfflinePlayer> list =  Arrays.stream(chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)).toList();
-            trustList = new ArrayList<>(list); // http://stackoverflow.com/questions/5755477/ddg#5755510
+    public void setClaimedChunk(ClaimedChunk claimedChunk, Chunk chunk){
+        if(claimedChunk.getOwner() != null){
+            chunk.getPersistentDataContainer().set(owner_key,PersistentDataType.STRING,claimedChunk.getOwner().getUniqueId().toString());
+        }else {
+            chunk.getPersistentDataContainer().remove(owner_key);
         }
-        return trustList;
-    }
-
-    public Component getTeamClaimMessage(Chunk chunk){
-        if(isTeamClaim(chunk)){
-            return MiniMessage.miniMessage().deserialize(Objects.requireNonNullElse(chunk.getPersistentDataContainer().get(teamclaim_key, PersistentDataType.STRING), ""));
+        if(claimedChunk.getTrusted() != null){
+            chunk.getPersistentDataContainer().set(trusted_key, DataType.OFFLINE_PLAYER_ARRAY , claimedChunk.getTrusted().toArray(new OfflinePlayer[0]));
+        }else {
+            chunk.getPersistentDataContainer().remove(trusted_key);
         }
-        return Component.text("");
-    }
-
-    public boolean trust(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(this.getTrustedList(chunk).contains(offlinePlayer)){
-            return false;
+        if(claimedChunk.getTeamClaim() != null){
+            chunk.getPersistentDataContainer().set(teamclaim_key, DataType.OFFLINE_PLAYER_ARRAY , claimedChunk.getTrusted().toArray(new OfflinePlayer[0]));
+        }else {
+            chunk.getPersistentDataContainer().remove(teamclaim_key);
         }
-
-        List<OfflinePlayer> trustList = getTrustedList(chunk);
-        trustList.add(offlinePlayer);
-        chunk.getPersistentDataContainer().set(trusted_key, DataType.OFFLINE_PLAYER_ARRAY , trustList.toArray(new OfflinePlayer[0]));
-        return true;
-    }
-
-    public boolean unTrust(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(!this.getTrustedList(chunk).contains(offlinePlayer)){
-            return false;
-        }
-
-        List<OfflinePlayer> trustList = getTrustedList(chunk);
-        trustList.remove(offlinePlayer);
-        chunk.getPersistentDataContainer().set(trusted_key, DataType.OFFLINE_PLAYER_ARRAY , trustList.toArray(new OfflinePlayer[0]));
-        return true;
+        this.chunkHashMap.remove(chunk);
+        this.chunkHashMap.put(chunk,claimedChunk);
     }
 
     public boolean claimChunk(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(!this.isClaimed(chunk)) {
-            if (this.canClaim(offlinePlayer)) {
-                chunk.getPersistentDataContainer().set(owner_key,PersistentDataType.STRING,offlinePlayer.getUniqueId().toString());
-                ExtraPlayerData extraPlayerData = getExtraPlayerData(offlinePlayer);
-                extraPlayerData.chunks.add(getSerializableChunk(chunk));
-                setExtraPlayerData(offlinePlayer, extraPlayerData);
+        if(!getClaimedChunk(chunk, true).isClaimed()){
+            if(canClaim(offlinePlayer)){
+                ClaimedChunk claimedChunk = new ClaimedChunk(chunk, offlinePlayer,null,null);
+                setClaimedChunk(claimedChunk, chunk);
                 return true;
             }
         }
         return false;
     }
 
-    public void teamClaimChunk(Chunk chunk, OfflinePlayer offlinePlayer, String message){
-        chunk.getPersistentDataContainer().set(owner_key,PersistentDataType.STRING,offlinePlayer.getUniqueId().toString());
-        chunk.getPersistentDataContainer().set(teamclaim_key, PersistentDataType.STRING, message);
-        ExtraPlayerData extraPlayerData = getExtraPlayerData(offlinePlayer);
-        extraPlayerData.chunks.add(getSerializableChunk(chunk));
-        setExtraPlayerData(offlinePlayer, extraPlayerData);
-
-    }
-
-    public boolean unClaimChunk(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(this.isClaimed(chunk)){
-            if(this.getOwner(chunk).equals(offlinePlayer)){
-                return forceUnClaimChunk(chunk);
-            }
+    public boolean unClaimChunk(ClaimedChunk claimedChunk, OfflinePlayer offlinePlayer){
+        if(claimedChunk.isClaimed() && claimedChunk.getOwner() != null && claimedChunk.getOwner().equals(offlinePlayer)){
+            return forceUnClaimChunk(claimedChunk);
         }
         return false;
     }
 
-    public boolean forceUnClaimChunk(Chunk chunk){
-        if(this.isClaimed(chunk)){
+    public boolean forceUnClaimChunk(ClaimedChunk claimedChunk){
+        if(claimedChunk.isClaimed()){
             try {
-                ExtraPlayerData extraPlayerData = getExtraPlayerData(getOwner(chunk));
-                extraPlayerData.chunks.remove(getSerializableChunk(chunk));
-                setExtraPlayerData(getOwner(chunk), extraPlayerData);
+                OfflinePlayer owner = claimedChunk.getOwner();
+                if(owner != null){
+                    ExtraPlayerData extraPlayerData = getExtraPlayerData(owner);
+                    extraPlayerData.chunks.remove(getSerializableChunk(claimedChunk.getChunk()));
+                    setExtraPlayerData(owner, extraPlayerData);
+                }
             }catch (Exception exception){
                 exception.printStackTrace();
             }
-            chunk.getPersistentDataContainer().remove(owner_key);
-            chunk.getPersistentDataContainer().remove(trusted_key);
-            chunk.getPersistentDataContainer().remove(teamclaim_key);
-
+            setClaimedChunk(new ClaimedChunk(null,null,null,null), claimedChunk.getChunk());
             return true;
         }
         return false;
@@ -131,6 +116,28 @@ public class ClaimManager {
 
     public boolean canClaim(OfflinePlayer offlinePlayer){
         return getExtraPlayerData(offlinePlayer).chunks.size() < getExtraPlayerData(offlinePlayer).maxclaims;
+    }
+
+    public boolean trust(ClaimedChunk claimedChunk, OfflinePlayer offlinePlayer){
+        if(claimedChunk.getTrusted().contains(offlinePlayer)){
+            return false;
+        }
+
+        List<OfflinePlayer> trustList = claimedChunk.getTrusted();
+        trustList.add(offlinePlayer);
+        setClaimedChunk(new ClaimedChunk(claimedChunk.getChunk(),claimedChunk.getOwner(),trustList,claimedChunk.getTeamClaim()),claimedChunk.getChunk());
+        return true;
+    }
+
+    public boolean unTrust(ClaimedChunk claimedChunk, OfflinePlayer offlinePlayer){
+        if(!claimedChunk.getTrusted().contains(offlinePlayer)){
+            return false;
+        }
+
+        List<OfflinePlayer> trustList = claimedChunk.getTrusted();
+        trustList.remove(offlinePlayer);
+        setClaimedChunk(new ClaimedChunk(claimedChunk.getChunk(),claimedChunk.getOwner(),trustList,claimedChunk.getTeamClaim()),claimedChunk.getChunk());
+        return true;
     }
 
     public ExtraPlayerData getExtraPlayerData(OfflinePlayer offlinePlayer){
@@ -157,4 +164,25 @@ public class ClaimManager {
         return new SerializableChunk(chunk.getWorld().getUID().toString(),chunk.getX(), chunk.getZ());
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onChunkLoad(ChunkLoadEvent event){
+        ClaimedChunk claimedChunk = getClaimedChunk(event.getChunk());
+        if(claimedChunk.isClaimed()){
+            OfflinePlayer chunkOwner = claimedChunk.getOwner();
+            if(chunkOwner != null){
+                ExtraPlayerData extraPlayerData = getExtraPlayerData(chunkOwner);
+                SerializableChunk serializableChunk = getSerializableChunk(event.getChunk());
+                if(!extraPlayerData.chunks.contains(serializableChunk)){
+                    plugin.getLogger().warning("Missing Claimed Chunk added to PlayerData. Chunk: "+serializableChunk.toString()+ " Chunk Owner: "+ chunkOwner.getName());
+                    extraPlayerData.chunks.add(serializableChunk);
+                    setExtraPlayerData(chunkOwner, extraPlayerData);
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onChunkUnLoad(ChunkUnloadEvent event){
+        chunkHashMap.remove(event.getChunk());
+    }
 }

@@ -2,7 +2,9 @@ package com.kalimero2.team.survivalplugin.util;
 
 import org.bukkit.Chunk;
 import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,7 +18,11 @@ public class ClaimedChunk {
     public ClaimedChunk(Chunk chunk, OfflinePlayer owner, List<OfflinePlayer> trusted, String teamClaim){
         this.chunk = chunk;
         this.owner = owner;
-        this.trusted = trusted;
+        if(trusted == null){
+            this.trusted = new ArrayList<>();
+        }else {
+            this.trusted = trusted;
+        }
         this.teamClaim = teamClaim;
     }
 
@@ -24,16 +30,26 @@ public class ClaimedChunk {
         return chunk;
     }
 
+    @Nullable
     public OfflinePlayer getOwner() {
         return owner;
     }
+
 
     public List<OfflinePlayer> getTrusted() {
         return trusted;
     }
 
+    @Nullable
     public String getTeamClaim() {
         return teamClaim;
+    }
+
+    public boolean isClaimed(){
+        if(this.getOwner() != null){
+            return true;
+        }
+        return this.getTeamClaim() != null;
     }
 
     @Override
