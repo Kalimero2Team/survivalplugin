@@ -289,13 +289,6 @@ public class ClaimListener implements Listener {
 
 
     @EventHandler
-    public void onEntityBlockBreak(EntityChangeBlockEvent event){
-        if(claimManager.isClaimed(event.getEntity().getChunk())){
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
     public void onBlockPistonExtend(BlockPistonExtendEvent event){
         List<Block> blocks = event.getBlocks();
 

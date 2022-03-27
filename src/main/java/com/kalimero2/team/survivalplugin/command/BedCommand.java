@@ -5,7 +5,7 @@ import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BedCommand extends Command{
+public class BedCommand extends CommandHandler {
 
     protected BedCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);

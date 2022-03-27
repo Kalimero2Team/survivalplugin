@@ -12,10 +12,10 @@ import org.bukkit.entity.Player;
 import org.javacord.api.entity.user.User;
 
 
-public class DiscordCommand extends Command{
+public class DiscordCommand extends CommandHandler {
 
-    private DiscordBot discordBot;
-    private MongoDB database;
+    private final DiscordBot discordBot;
+    private final MongoDB database;
 
     protected DiscordCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);
@@ -25,15 +25,17 @@ public class DiscordCommand extends Command{
 
     @Override
     public void register() {
-        commandManager.command(commandManager.commandBuilder("discord").argument(OfflinePlayerArgument.optional("player")).handler(this::info));
+        if(this.discordBot != null && this.database != null){
+            commandManager.command(commandManager.commandBuilder("discord").argument(OfflinePlayerArgument.optional("player")).handler(this::info));
+        }
     }
 
     private void info(CommandContext<CommandSender> context) {
         if(context.getSender() instanceof Player player){
             OfflinePlayer target = context.getOrDefault("player",player);
 
-            User user = discordBot.getMember(database.getUser(target.getUniqueId()).getDiscordUser());
-            String name = user.getName()+ "#" + user.getDiscriminator();
+            User user = discordBot.discordTrustList.getMember(database.getUser(target.getUniqueId()).getDiscordUser());
+            String name = user.getDiscriminatedName();
             String id = user.getIdAsString();
             plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name",name),Placeholder.unparsed("discord_id",id));
         }

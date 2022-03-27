@@ -8,14 +8,15 @@ import cloud.commandframework.bukkit.parsers.location.Location2D;
 import cloud.commandframework.bukkit.parsers.location.Location2DArgument;
 import cloud.commandframework.context.CommandContext;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
+import com.kalimero2.team.survivalplugin.database.MongoDB;
+import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
+import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.util.ClaimManager;
 import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
 import com.kalimero2.team.survivalplugin.util.SerializableChunk;
-import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -23,61 +24,168 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-public class AdminCommand extends Command{
+public class AdminCommand extends CommandHandler {
+
+    private MongoDB database;
+    private DiscordBot discordBot;
 
     protected AdminCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);
+        database = plugin.getDatabase();
+        discordBot = plugin.getDiscordBot();
     }
 
     @Override
     public void register() {
-        commandManager.command(commandManager.commandBuilder("admin").literal("reload").permission("survivalplugin.admin.reload").handler(this::reload));
-        commandManager.command(commandManager.commandBuilder("admin").literal("database").literal("reload").permission("survivalplugin.admin.database.reload").handler(this::reloadDatabase));
-        commandManager.command(commandManager.commandBuilder("admin").literal("database").literal("purge").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.database.purge").handler(this::purgeDatabase));
-        commandManager.command(commandManager.commandBuilder("admin").literal("alts").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.alts").handler(this::alts));
-        commandManager.command(commandManager.commandBuilder("admin").literal("tab").literal("header").argument(StringArgument.greedy("header")).permission("survivalplugin.admin.tab.header").handler(this::header));
-        commandManager.command(commandManager.commandBuilder("admin").literal("tab").literal("footer").argument(StringArgument.greedy("footer")).permission("survivalplugin.admin.tab.footer").handler(this::footer));
-        commandManager.command(commandManager.commandBuilder("admin").literal("claims").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.claims").handler(this::extraPlayerData));
-        commandManager.command(commandManager.commandBuilder("admin").literal("unclaim-all").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.unclaim-all").handler(this::unClaimAll));
-        commandManager.command(commandManager.commandBuilder("admin").literal("chunk").literal("claim").argument(StringArgument.greedy("message")).permission("survivalplugin.admin.claim").handler(this::claim));
-        commandManager.command(commandManager.commandBuilder("admin").literal("chunk").literal("unclaim").permission("survivalplugin.admin.unclaim").handler(this::unClaim));
-        commandManager.command(commandManager.commandBuilder("admin").literal("set-max-claims").argument(OfflinePlayerArgument.of("player")).argument(IntegerArgument.of("claims")).permission("survivalplugin.admin.set-max-claims").handler(this::setMaxClaims));
-        commandManager.command(commandManager.commandBuilder("admin").literal("tpchunk").argument(Location2DArgument.of("location")).permission("survivalplugin.admin.tpchunk").handler(this::teleportChunk));
-        commandManager.command(commandManager.commandBuilder("admin").literal("portal").literal("end").argument(BooleanArgument.of("bool")).permission("survivalplugin.admin.portal.end").handler(this::setEnableEndPortal));
-        commandManager.command(commandManager.commandBuilder("admin").literal("portal").literal("end-gateway").argument(BooleanArgument.of("bool")).permission("survivalplugin.admin.portal.end-gateway").handler(this::setEnableEndGateway));;
-        commandManager.command(commandManager.commandBuilder("admin").literal("portal").literal("nether").argument(BooleanArgument.of("bool")).permission("survivalplugin.admin.portal.nether").handler(this::setEnableNetherPortal));
-        commandManager.command(commandManager.commandBuilder("admin").literal("max-players").argument(IntegerArgument.of("amount")).permission("survivalplugin.admin.max-players").handler(this::setMaxPlayers));
-        commandManager.command(commandManager.commandBuilder("admin").literal("maintenance").literal("on").argument(StringArgument.greedy("text")).permission("survivalplugin.admin.maintenance").handler(this::maintenanceOn));
-        commandManager.command(commandManager.commandBuilder("admin").literal("maintenance").literal("off").permission("survivalplugin.admin.maintenance").handler(this::maintenanceOff));
-        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("on").permission("survivalplugin.admin.vipmode").handler(this::vipOn));
-        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("off").permission("survivalplugin.admin.vipmode").handler(this::vipOff));
-        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("add").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.vipmode").handler(this::vipAdd));
-        commandManager.command(commandManager.commandBuilder("admin").literal("vip-mode").literal("remove").argument(OfflinePlayerArgument.of("player")).permission("survivalplugin.admin.vipmode").handler(this::vipRemove));
-    }
+        if(this.database != null){
+            commandManager.command(commandManager.commandBuilder("admin").
+                    literal("database").
+                    literal("reload").
+                    permission("survivalplugin.admin.database.reload").
+                    handler(this::reloadDatabase));
+            commandManager.command(commandManager.commandBuilder("admin").
+                    literal("database").
+                    literal("purge").
+                    argument(OfflinePlayerArgument.of("player")).
+                    permission("survivalplugin.admin.database.purge").
+                    handler(this::purgeDatabase));
+            commandManager.command(commandManager.commandBuilder("admin").
+                    literal("alts").
+                    argument(OfflinePlayerArgument.of("player")).
+                    permission("survivalplugin.admin.alts").
+                    handler(this::alts));
+        }
 
-    private void reload(CommandContext<CommandSender> context){
-        plugin.reloadConfig();
-        context.getSender().sendMessage(Component.text("Reloaded Config"));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("reload").
+                permission("survivalplugin.admin.reload").
+                handler(this::reload));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("tab").
+                    literal("header").
+                    argument(StringArgument.greedy("header")).
+                    permission("survivalplugin.admin.tab.header").
+                    handler(this::header));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("tab").
+                    literal("footer").
+                    argument(StringArgument.greedy("footer")).
+                    permission("survivalplugin.admin.tab.footer").
+                    handler(this::footer));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("claims").
+                argument(OfflinePlayerArgument.of("player")).
+                permission("survivalplugin.admin.claims").
+                handler(this::extraPlayerData));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("unclaim-all").
+                argument(OfflinePlayerArgument.of("player")).
+                permission("survivalplugin.admin.unclaim-all").
+                handler(this::unClaimAll));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("chunk").literal("claim").
+                argument(StringArgument.greedy("message")).
+                permission("survivalplugin.admin.claim").
+                handler(this::claim));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("chunk").
+                literal("unclaim").
+                permission("survivalplugin.admin.unclaim").
+                handler(this::unClaim));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("set-max-claims").
+                argument(OfflinePlayerArgument.of("player")).
+                argument(IntegerArgument.of("claims")).
+                permission("survivalplugin.admin.set-max-claims").
+                handler(this::setMaxClaims));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("tpchunk").
+                argument(Location2DArgument.of("location")).
+                permission("survivalplugin.admin.tpchunk").
+                handler(this::teleportChunk));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("portal").
+                    literal("end").
+                    argument(BooleanArgument.of("bool")).
+                    permission("survivalplugin.admin.portal.end").
+                    handler(this::setEnableEndPortal));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("portal").
+                    literal("end-gateway").
+                    argument(BooleanArgument.of("bool")).
+                    permission("survivalplugin.admin.portal.end-gateway").
+                    handler(this::setEnableEndGateway));;
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("portal").
+                    literal("nether").
+                    argument(BooleanArgument.of("bool")).
+                    permission("survivalplugin.admin.portal.nether").
+                    handler(this::setEnableNetherPortal));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("max-players").
+                argument(IntegerArgument.of("amount")).
+                permission("survivalplugin.admin.max-players").
+                handler(this::setMaxPlayers));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("maintenance").
+                    literal("on").
+                    argument(StringArgument.greedy("text")).
+                    permission("survivalplugin.admin.maintenance").
+                    handler(this::maintenanceOn));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("maintenance").
+                    literal("off").
+                    permission("survivalplugin.admin.maintenance").
+                    handler(this::maintenanceOff));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("vip-mode").
+                    literal("on").
+                    permission("survivalplugin.admin.vipmode").
+                    handler(this::vipOn));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("vip-mode").
+                    literal("off").
+                    permission("survivalplugin.admin.vipmode").
+                    handler(this::vipOff));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("vip-mode").
+                    literal("add").
+                    argument(OfflinePlayerArgument.of("player")).
+                    permission("survivalplugin.admin.vipmode").
+                    handler(this::vipAdd));
+        commandManager.command(commandManager.commandBuilder("admin").
+                literal("vip-mode").
+                    literal("remove").
+                    argument(OfflinePlayerArgument.of("player")).
+                    permission("survivalplugin.admin.vipmode").
+                    handler(this::vipRemove));
     }
 
     private void reloadDatabase(CommandContext<CommandSender> context){
-        plugin.getDatabase().getUsers(true);
+        database.getUsers(true);
         context.getSender().sendMessage(Component.text("Reloaded Database"));
     }
 
     private void purgeDatabase(CommandContext<CommandSender> context){
         OfflinePlayer player = context.get("player");
-        plugin.getDiscordBot().removeDiscordUser(plugin.getDatabase().getUser(player.getUniqueId()));
+        if(discordBot != null){
+            discordBot.discordTrustList.removeDiscordUser(database.getUser(player.getUniqueId()));
+        }
         context.getSender().sendMessage(Component.text("Removed User from Database"));
     }
 
     private void alts(CommandContext<CommandSender> context){
         OfflinePlayer player = context.get("player");
 
-        MinecraftUser user = plugin.getDatabase().getUser(player.getUniqueId());
+        MinecraftUser user = database.getUser(player.getUniqueId());
         if(user != null){
-            plugin.getDatabase().getUserAlts(user).forEach(u -> context.getSender().sendMessage(u.getName()));
+            database.getUserAlts(user).forEach(u -> context.getSender().sendMessage(u.getName()));
         }
+    }
+
+    private void reload(CommandContext<CommandSender> context){
+        plugin.reloadConfig();
+        context.getSender().sendMessage(Component.text("Reloaded Config"));
     }
 
     private void header(CommandContext<CommandSender> context){

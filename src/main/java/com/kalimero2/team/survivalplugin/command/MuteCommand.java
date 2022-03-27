@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 
-public class MuteCommand extends Command{
+public class MuteCommand extends CommandHandler {
 
     protected MuteCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);
