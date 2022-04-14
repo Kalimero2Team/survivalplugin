@@ -47,7 +47,8 @@ public class CommandManager extends PaperCommandManager<CommandSender> {
                 new IntroductionCommand(plugin, this),
                 new BedCommand(plugin, this),
                 new CraftingTableCommand(plugin, this),
-                new EnderChestCommand(plugin, this)
+                new EnderChestCommand(plugin, this),
+                new StatusCommand(plugin, this)
         ).forEach(Command::register);
 
 

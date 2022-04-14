@@ -68,6 +68,11 @@ public class MainListener implements Listener {
         }else {
             playerlistname = Component.text("Spieler ").color(NamedTextColor.GRAY).append(player.name().color(NamedTextColor.WHITE));
         }
+        if(plugin.playerStatus.getStatus(player) != null){
+            Component suffix = MiniMessage.miniMessage().deserialize(" <gray>[<status>]</gray>", TagResolver.builder().resolver(Placeholder.unparsed("status",plugin.playerStatus.getStatus(player))).build());
+            playerlistname = playerlistname.append(suffix);
+        }
+
         player.playerListName(playerlistname);
         player.displayName(null);
 
@@ -116,8 +121,12 @@ public class MainListener implements Listener {
             }else if(extraPlayerData.vip){
                 prefix = Component.text("VIP ").color(NamedTextColor.GOLD);
             }
+            Component suffix = Component.text("");
+            if(plugin.playerStatus.getStatus(source) != null){
+                suffix = MiniMessage.miniMessage().deserialize(" <gray>[<status>]</gray>", TagResolver.builder().resolver(Placeholder.unparsed("status",plugin.playerStatus.getStatus(source))).build());
+            }
 
-            return MiniMessage.miniMessage().deserialize("<prefix><player> <bold>»</bold> <message>",Placeholder.component("prefix", prefix),Placeholder.unparsed("player", event.getPlayer().getName()), Placeholder.component("message",message));
+            return MiniMessage.miniMessage().deserialize("<prefix><player><suffix> <bold>»</bold> <message>",Placeholder.component("prefix", prefix),Placeholder.unparsed("player", event.getPlayer().getName()), Placeholder.component("suffix",suffix), Placeholder.component("message",message));
 
         });
     }

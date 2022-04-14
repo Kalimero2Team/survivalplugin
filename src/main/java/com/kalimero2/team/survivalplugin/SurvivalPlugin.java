@@ -33,6 +33,7 @@ public final class SurvivalPlugin extends JavaPlugin {
     public IntroductionUtil introductionUtil;
     public ClaimManager claimManager;
     public File playerDataFolder;
+    public PlayerStatus playerStatus;
     public Map<String, MinecraftUser> codeIdMap = new HashMap<>();
 
 
@@ -84,6 +85,8 @@ public final class SurvivalPlugin extends JavaPlugin {
         /*new EnchantmentManager(this);
         plugin.getLogger().info("Registered Enchantments");*/
         introductionUtil = new IntroductionUtil(this);
+
+        playerStatus = new PlayerStatus(this);
 
         try {
             new CommandManager(plugin);
