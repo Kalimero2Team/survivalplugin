@@ -17,6 +17,7 @@ chunk:
 
 vip-roles: []
 messages: "messages_en.yml"
+status: ["AFK","Mining","Roleplay","PVP","Redstone","Building"]
 rules: ["Rule 1","Rule 2","Rule 3","Rule 4"]
 introduction: ["Page 1","Page 2","Page 3","Page 4"]
 introduction-title: "Introduction"

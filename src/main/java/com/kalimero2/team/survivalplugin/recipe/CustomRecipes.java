@@ -38,5 +38,4 @@ public class CustomRecipes implements Listener {
         return elytraRecipe;
     }
 
-
 }

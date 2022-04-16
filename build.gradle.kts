@@ -23,7 +23,7 @@ dependencies {
     bukkitLibrary("org.apache.logging.log4j","log4j-core","2.17.1")
     compileOnly("io.papermc.paper","paper-api","1.18.2-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
-    implementation("org.mongodb","mongodb-driver-sync","4.4.0")
+    implementation("org.mongodb","mongodb-driver-sync","4.5.1")
     implementation("org.javacord","javacord","3.4.0")
     implementation("cloud.commandframework","cloud-paper","1.6.2")
     implementation("de.jeff_media","MorePersistentDataTypes","1.0.0")
@@ -46,11 +46,11 @@ tasks {
 
     shadowJar {
         fun reloc(pkg: String) = relocate(pkg, "com.kalimero2.team.survivalplugin.dependency.$pkg")
-
         reloc("org.mongodb")
         reloc("cloud.commandframework")
-        reloc("io.leangen.geantyref")
-        reloc("de.jeff_media.morepersistentdatatypes")
+        reloc("io.leangen")
+        reloc("de.jeff_media")
+
 
         archiveFileName.set("SurvivalPlugin.jar")
     }

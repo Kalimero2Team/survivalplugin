@@ -11,10 +11,12 @@ import java.util.List;
 
 public class PlayerStatus{
 
-    private NamespacedKey statusKey;
+    private final SurvivalPlugin plugin;
+    private final NamespacedKey statusKey;
 
     public PlayerStatus(SurvivalPlugin plugin){
-        statusKey = new NamespacedKey(plugin, "status");
+        this.plugin = plugin;
+        this.statusKey = new NamespacedKey(plugin, "status");
     }
 
     public void setStatus(Player player, @Nullable String status){
@@ -30,7 +32,7 @@ public class PlayerStatus{
     }
 
     public List<String> allowed(){
-        return ImmutableList.of("AFK","Mining","Roleplay","Ork","PVP","Redstone","Building");
+        return plugin.getConfig().getStringList("status");
     }
 
     public boolean isAllowed(String status){

@@ -5,6 +5,7 @@ import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import com.kalimero2.team.survivalplugin.util.ClaimManager;
 import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
 import com.kalimero2.team.survivalplugin.util.SerializableChunk;
+import io.papermc.paper.event.entity.EntityMoveEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -38,7 +39,7 @@ public class ClaimListener implements Listener {
         this.claimManager = plugin.claimManager;
     }
 
-    public boolean shouldcancel(Chunk chunk, Player player){
+    public boolean shouldCancel(Chunk chunk, Player player){
         if(claimManager.isClaimed(chunk)){
             if(claimManager.isTeamClaim(chunk)){
                 if(!claimManager.getTrustedList(chunk).contains(player)){
@@ -47,6 +48,21 @@ public class ClaimListener implements Listener {
             }
             if(!claimManager.getOwner(chunk).equals(player)){
                 return !claimManager.getTrustedList(chunk).contains(player);
+            }
+        }
+        return false;
+    }
+
+    private boolean shouldCancel(Chunk originChunk, Chunk destChunk) {
+        if(!originChunk.equals(destChunk)){
+            if(claimManager.isClaimed(destChunk)){
+                if(claimManager.isClaimed(originChunk)){
+                    if(!claimManager.getOwner(destChunk).getUniqueId().equals(claimManager.getOwner(originChunk).getUniqueId())){
+                        return true;
+                    }
+                }else {
+                    return true;
+                }
             }
         }
         return false;
@@ -81,7 +97,7 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event){
-        if(shouldcancel(event.getBlock().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getBlock().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -89,14 +105,14 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent event){
-        if(shouldcancel(event.getBlock().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getBlock().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
     
     @EventHandler
     public void onPlayerBucketFishEvent(PlayerBucketEntityEvent event){
-        if(shouldcancel(event.getEntity().getLocation().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getEntity().getLocation().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -128,7 +144,7 @@ public class ClaimListener implements Listener {
                     event.setCancelled(true);
                 }
                 if(projectile.getShooter() instanceof Player player){
-                    if(shouldcancel(event.getEntity().getChunk(), player)){
+                    if(shouldCancel(event.getEntity().getChunk(), player)){
                         onEntityDamageByPlayer(event, player);
                     }
                 }
@@ -141,14 +157,14 @@ public class ClaimListener implements Listener {
             event.setCancelled(false);
             return;
         }else if(event.getEntity() instanceof Animals || event.getEntity() instanceof Tameable || event.getEntity() instanceof NPC || event.getEntity() instanceof Hanging || event.getEntity() instanceof ArmorStand){
-            if(shouldcancel(event.getEntity().getLocation().getChunk(), player)){
+            if(shouldCancel(event.getEntity().getLocation().getChunk(), player)){
                 event.setCancelled(true);
                 return;
             }
         }
 
         if(claimManager.isTeamClaim(event.getEntity().getChunk())){
-            if(shouldcancel(event.getEntity().getChunk(), player)){
+            if(shouldCancel(event.getEntity().getChunk(), player)){
                 event.setCancelled(true);
             }
         }
@@ -157,7 +173,7 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onLecternBookEvent(PlayerTakeLecternBookEvent event){
-        if(shouldcancel(event.getLectern().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getLectern().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -165,7 +181,7 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onInteractEvent(PlayerInteractEvent event){
         if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
-            if(shouldcancel(event.getClickedBlock().getChunk(), event.getPlayer())){
+            if(shouldCancel(event.getClickedBlock().getChunk(), event.getPlayer())){
                 Material material = event.getClickedBlock().getType();
                 List<Material> protected_materials = Lists.newArrayList(Material.CHEST,Material.TRAPPED_CHEST,Material.BARREL,Material.SHULKER_BOX,Material.WHITE_SHULKER_BOX,Material.ORANGE_SHULKER_BOX,Material.MAGENTA_SHULKER_BOX,Material.LIGHT_BLUE_SHULKER_BOX,Material.YELLOW_SHULKER_BOX,Material.LIME_SHULKER_BOX,Material.PINK_SHULKER_BOX,Material.GRAY_SHULKER_BOX,Material.LIGHT_GRAY_SHULKER_BOX,Material.CYAN_SHULKER_BOX,Material.PURPLE_SHULKER_BOX,Material.BLUE_SHULKER_BOX,Material.BROWN_SHULKER_BOX,Material.GREEN_SHULKER_BOX,Material.RED_SHULKER_BOX,Material.BLACK_SHULKER_BOX,Material.FURNACE,Material.BLAST_FURNACE,Material.SMOKER,Material.BREWING_STAND,Material.DAMAGED_ANVIL,Material.JUKEBOX,Material.HOPPER,Material.DROPPER,Material.DISPENSER,Material.CAULDRON,Material.NOTE_BLOCK,Material.BEACON,Material.COMPARATOR,Material.REPEATER,Material.REDSTONE);
 
@@ -183,7 +199,7 @@ public class ClaimListener implements Listener {
         }else if(event.getAction().equals(Action.PHYSICAL)){
             if(event.getClickedBlock() != null){
                 if(event.getClickedBlock().getType().equals(Material.FARMLAND)){
-                    if(shouldcancel(event.getClickedBlock().getChunk(), event.getPlayer())){
+                    if(shouldCancel(event.getClickedBlock().getChunk(), event.getPlayer())){
                         event.setCancelled(true);
                         return;
                     }
@@ -192,7 +208,7 @@ public class ClaimListener implements Listener {
         }
 
         if(claimManager.isTeamClaim(event.getPlayer().getChunk())){
-            if(shouldcancel(event.getPlayer().getChunk(), event.getPlayer())){
+            if(shouldCancel(event.getPlayer().getChunk(), event.getPlayer())){
                 if(!event.getAction().equals(Action.RIGHT_CLICK_AIR)){
                     event.setCancelled(true);
                 }
@@ -209,7 +225,7 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onTeleport(PlayerTeleportEvent event) {
         if(event.getCause().equals(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT)){
-            if(shouldcancel(event.getTo().getChunk(), event.getPlayer())){
+            if(shouldCancel(event.getTo().getChunk(), event.getPlayer())){
                 event.setCancelled(true);
             }
         }
@@ -220,7 +236,7 @@ public class ClaimListener implements Listener {
         Player player = breakEvent.getPlayer();
         Block block = breakEvent.getBlock();
 
-        if(shouldcancel(block.getChunk(), player)){
+        if(shouldCancel(block.getChunk(), player)){
             breakEvent.setCancelled(true);
         }
     }
@@ -229,7 +245,7 @@ public class ClaimListener implements Listener {
     public void onBlocksPlace(BlockMultiPlaceEvent placeEvent) {
         Player player = placeEvent.getPlayer();
         for(BlockState blockState:placeEvent.getReplacedBlockStates()){
-            if(shouldcancel(blockState.getChunk(), player)){
+            if(shouldCancel(blockState.getChunk(), player)){
                 placeEvent.setCancelled(true);
             }
         }
@@ -239,7 +255,7 @@ public class ClaimListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent placeEvent) {
         Player player = placeEvent.getPlayer();
         Block block = placeEvent.getBlock();
-        if(shouldcancel(block.getChunk(), player)){
+        if(shouldCancel(block.getChunk(), player)){
             placeEvent.setCancelled(true);
         }
 
@@ -253,12 +269,12 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onHangingBreak(HangingBreakByEntityEvent event){
         if(event.getRemover() instanceof Player player){
-            if(shouldcancel(event.getEntity().getChunk(), player)){
+            if(shouldCancel(event.getEntity().getChunk(), player)){
                 event.setCancelled(true);
             }
         }else if (event.getRemover() instanceof Projectile projectile){
             if(projectile.getShooter() instanceof Player player){
-                if(shouldcancel(event.getEntity().getChunk(), player)){
+                if(shouldCancel(event.getEntity().getChunk(), player)){
                     event.setCancelled(true);
                 }
             }else{
@@ -275,22 +291,14 @@ public class ClaimListener implements Listener {
 
     @EventHandler
     public void onHangingPlace(HangingPlaceEvent event){
-        if(shouldcancel(event.getEntity().getChunk(), event.getPlayer())){
+        if(shouldCancel(event.getEntity().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event){
-        if(shouldcancel(event.getRightClicked().getChunk(), event.getPlayer())){
-            event.setCancelled(true);
-        }
-    }
-
-
-    @EventHandler
-    public void onEntityBlockBreak(EntityChangeBlockEvent event){
-        if(claimManager.isClaimed(event.getEntity().getChunk())){
+        if(shouldCancel(event.getRightClicked().getChunk(), event.getPlayer())){
             event.setCancelled(true);
         }
     }
@@ -417,33 +425,19 @@ public class ClaimListener implements Listener {
             Chunk originChunk = event.getBlock().getChunk();
             Chunk destChunk = event.getBlock().getLocation().add(directional.getFacing().getDirection()).getChunk();
 
-            if(hasSameOwner(originChunk, destChunk)){
+            if(shouldCancel(originChunk, destChunk)){
                 event.setCancelled(true);
             }
         }
     }
 
-    private boolean hasSameOwner(Chunk originChunk, Chunk destChunk) {
-        if(!originChunk.equals(destChunk)){
-            if(claimManager.isClaimed(destChunk)){
-                if(claimManager.isClaimed(originChunk)){
-                    if(!claimManager.getOwner(destChunk).getUniqueId().equals(claimManager.getOwner(originChunk).getUniqueId())){
-                        return true;
-                    }
-                }else {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 
     @EventHandler
     public void onBlockSpread(BlockSpreadEvent event){
         Chunk originChunk = event.getSource().getChunk();
         Chunk destChunk = event.getBlock().getChunk();
 
-        if(hasSameOwner(originChunk, destChunk)){
+        if(shouldCancel(originChunk, destChunk)){
             event.setCancelled(true);
         }
     }
@@ -455,7 +449,7 @@ public class ClaimListener implements Listener {
         for(BlockState block:event.getBlocks()){
             Chunk destChunk = block.getChunk();
 
-            if(hasSameOwner(originChunk, destChunk)){
+            if(shouldCancel(originChunk, destChunk)){
                 event.setCancelled(true);
             }
         }

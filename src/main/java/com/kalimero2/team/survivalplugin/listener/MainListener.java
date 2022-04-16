@@ -25,6 +25,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 import org.javacord.api.entity.permission.Role;
 
 import java.util.*;
@@ -108,11 +109,11 @@ public class MainListener implements Listener {
                 event.setCancelled(true);
             }
         }
-        if(event.getPlayer().getPersistentDataContainer().has(key, DataType.BOOLEAN)){
-            if(event.getPlayer().getPersistentDataContainer().get(key, DataType.BOOLEAN)){
-                event.setCancelled(true);
-            }
+
+        if(Boolean.TRUE.equals(event.getPlayer().getPersistentDataContainer().get(key, DataType.BOOLEAN))){
+            event.setCancelled(true);
         }
+
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             Component prefix = Component.text("Spieler ").color(NamedTextColor.GRAY);
             ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(source);
@@ -155,7 +156,6 @@ public class MainListener implements Listener {
     public void onPreLogin(AsyncPlayerPreLoginEvent event){
         List<MinecraftUser> list = database.getUsers();
         PlayerProfile player = event.getPlayerProfile();
-
         if(player.getId() == null){
             return;
         }

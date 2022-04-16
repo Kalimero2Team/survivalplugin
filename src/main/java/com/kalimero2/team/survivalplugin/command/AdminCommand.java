@@ -57,6 +57,10 @@ public class AdminCommand extends Command{
     private void reload(CommandContext<CommandSender> context){
         plugin.reloadConfig();
         context.getSender().sendMessage(Component.text("Reloaded Config"));
+        if(plugin.getDiscordBot() != null){
+            plugin.startDiscordBot();
+            context.getSender().sendMessage(Component.text("Reloaded Discord Bot"));
+        }
     }
 
     private void reloadDatabase(CommandContext<CommandSender> context){

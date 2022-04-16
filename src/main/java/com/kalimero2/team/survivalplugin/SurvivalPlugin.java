@@ -58,12 +58,7 @@ public final class SurvivalPlugin extends JavaPlugin {
             exception.printStackTrace();
         }
 
-        try {
-            this.discordBot = new DiscordBot(plugin.getConfig().getString("discord.token"), plugin);
-        } catch (LoginException exception) {
-            exception.printStackTrace();
-        }
-
+        startDiscordBot();
     }
 
     @Override
@@ -96,6 +91,18 @@ public final class SurvivalPlugin extends JavaPlugin {
         }
 
         new CustomRecipes(this);
+    }
+
+    public void startDiscordBot(){
+        try {
+            if(this.discordBot != null){
+                this.discordBot.discordApi.disconnect().join();
+                this.discordBot = null;
+            }
+            this.discordBot = new DiscordBot(plugin.getConfig().getString("discord.token"), plugin);
+        } catch (LoginException exception) {
+            exception.printStackTrace();
+        }
     }
 
     public DiscordBot getDiscordBot() {
