@@ -7,7 +7,7 @@ import org.bukkit.Statistic;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class EnderChestCommand extends Command{
+public class EnderChestCommand extends CommandHandler {
 
     protected EnderChestCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);

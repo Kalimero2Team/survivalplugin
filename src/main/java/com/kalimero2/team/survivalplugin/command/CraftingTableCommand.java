@@ -7,7 +7,7 @@ import org.bukkit.Statistic;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class CraftingTableCommand extends Command{
+public class CraftingTableCommand extends CommandHandler {
 
     protected CraftingTableCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);

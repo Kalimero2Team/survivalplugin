@@ -5,7 +5,7 @@ import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class IntroductionCommand extends Command{
+public class IntroductionCommand extends CommandHandler {
 
 
     protected IntroductionCommand(SurvivalPlugin plugin, CommandManager commandManager) {

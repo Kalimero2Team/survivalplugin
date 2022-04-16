@@ -11,7 +11,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class StatusCommand extends Command{
+public class StatusCommand extends CommandHandler{
 
 
     protected StatusCommand(SurvivalPlugin plugin, CommandManager commandManager) {

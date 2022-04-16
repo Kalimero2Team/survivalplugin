@@ -6,7 +6,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class SpawnCommand extends Command{
+public class SpawnCommand extends CommandHandler {
 
 
     protected SpawnCommand(SurvivalPlugin plugin, CommandManager commandManager) {

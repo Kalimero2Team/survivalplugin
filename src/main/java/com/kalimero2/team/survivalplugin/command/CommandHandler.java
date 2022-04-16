@@ -2,11 +2,11 @@ package com.kalimero2.team.survivalplugin.command;
 
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 
-public abstract class Command {
+public abstract class CommandHandler {
     protected final SurvivalPlugin plugin;
     protected final CommandManager commandManager;
 
-    protected Command(
+    protected CommandHandler(
             final SurvivalPlugin plugin,
             final CommandManager commandManager
     ) {

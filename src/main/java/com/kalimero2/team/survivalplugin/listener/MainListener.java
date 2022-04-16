@@ -177,11 +177,11 @@ public class MainListener implements Listener {
         }
 
         if(minecraftUser.isRulesAccepted()){
-            if(!discordBot.checkDiscord(minecraftUser.getDiscordUser())){
+            if(!discordBot.discordTrustList.checkDiscord(minecraftUser.getDiscordUser())){
                 minecraftUser.setDiscordUser(null);
                 database.updateUser(minecraftUser);
             }else {
-                discordBot.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
+                discordBot.discordTrustList.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
                     if(plugin.getConfig().getStringList("vip_roles").contains(role.getIdAsString())){
                         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
                         extraPlayerData.vip = true;
@@ -218,17 +218,7 @@ public class MainListener implements Listener {
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, message);
         }
 
-        MinecraftUser finalMinecraftUser = minecraftUser;
-        discordBot.discordApi.getServers().forEach(server -> {
-            Role role = server.getRoleById(plugin.getConfig().getString("discord.role")).orElse(null);
-            if(role != null) {
-                if(finalMinecraftUser.getDiscordUser() != null){
-                    if(server.getMemberById(finalMinecraftUser.getDiscordUser().getDiscordId()).isPresent()){
-                        server.getMemberById(finalMinecraftUser.getDiscordUser().getDiscordId()).get().addRole(role);
-                    }
-                }
-            }
-        });
+        discordBot.discordTrustList.giveRole(minecraftUser);
 
         if(!plugin.getServer().getOfflinePlayer(event.getUniqueId()).isOp()){
             if(plugin.maintenance != null){

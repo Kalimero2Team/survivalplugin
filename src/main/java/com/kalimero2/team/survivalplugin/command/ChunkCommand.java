@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ChunkCommand extends Command{
+public class ChunkCommand extends CommandHandler {
 
     private final ClaimManager claimManager;
     private final MessageUtil messageUtil;

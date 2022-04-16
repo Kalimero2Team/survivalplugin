@@ -1,9 +1,9 @@
 discord:
   token: ""
-  webhook: ""
   whitelist_channel: ""
   whitelist_category: ""
   role: ""
+  server: ""
 mongodb:
   url: ""
   database: "minecraft"
@@ -15,6 +15,7 @@ chunk:
   entity:
     limit: 50
 
+admin-roles: []
 vip-roles: []
 messages: "messages_en.yml"
 status: ["AFK","Mining","Roleplay","PVP","Redstone","Building"]

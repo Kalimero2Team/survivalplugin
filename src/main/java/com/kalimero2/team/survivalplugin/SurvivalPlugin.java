@@ -12,6 +12,7 @@ import com.kalimero2.team.survivalplugin.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.geysermc.floodgate.api.FloodgateApi;
+import org.jetbrains.annotations.Nullable;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
@@ -36,7 +37,6 @@ public final class SurvivalPlugin extends JavaPlugin {
     public PlayerStatus playerStatus;
     public Map<String, MinecraftUser> codeIdMap = new HashMap<>();
 
-
     @Override
     public void onLoad(){
 
@@ -55,10 +55,13 @@ public final class SurvivalPlugin extends JavaPlugin {
         try{
             this.database = new MongoDB(plugin.getConfig().getString("mongodb.url"),plugin.getConfig().getString("mongodb.database"));
         }catch (IllegalArgumentException exception){
+            this.database = null;
             exception.printStackTrace();
         }
 
-        startDiscordBot();
+        if(this.database != null){
+            startDiscordBot();
+        }
     }
 
     @Override
@@ -96,7 +99,7 @@ public final class SurvivalPlugin extends JavaPlugin {
     public void startDiscordBot(){
         try {
             if(this.discordBot != null){
-                this.discordBot.discordApi.disconnect().join();
+                this.discordBot.disconnect().join();
                 this.discordBot = null;
             }
             this.discordBot = new DiscordBot(plugin.getConfig().getString("discord.token"), plugin);
@@ -109,6 +112,7 @@ public final class SurvivalPlugin extends JavaPlugin {
         return discordBot;
     }
 
+    @Nullable
     public MongoDB getDatabase() {
         return database;
     }
