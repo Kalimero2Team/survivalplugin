@@ -99,6 +99,12 @@ public class AdminCommand extends CommandHandler {
                 permission("survivalplugin.admin.set-max-claims").
                 handler(this::setMaxClaims));
         commandManager.command(commandManager.commandBuilder("admin").
+                literal("add-max-claims").
+                argument(OfflinePlayerArgument.of("player")).
+                argument(IntegerArgument.of("claims")).
+                permission("survivalplugin.admin.add-max-claims").
+                handler(this::addMaxClaims));
+        commandManager.command(commandManager.commandBuilder("admin").
                 literal("tpchunk").
                 argument(Location2DArgument.of("location")).
                 permission("survivalplugin.admin.tpchunk").
@@ -228,6 +234,16 @@ public class AdminCommand extends CommandHandler {
         CommandSender sender =  context.getSender();
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(context.get("player"));
         Integer newmaxclaims = context.get("claims");
+        sender.sendMessage("Old Max Claims: "+extraPlayerData.maxclaims);
+        sender.sendMessage("New Max Claims: "+newmaxclaims);
+        extraPlayerData.maxclaims = newmaxclaims;
+        plugin.claimManager.setExtraPlayerData(context.get("player"),extraPlayerData);
+    }
+
+    private void addMaxClaims(CommandContext<CommandSender> context) {
+        CommandSender sender =  context.getSender();
+        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(context.get("player"));
+        Integer newmaxclaims = (Integer) context.get("claims") + extraPlayerData.maxclaims;
         sender.sendMessage("Old Max Claims: "+extraPlayerData.maxclaims);
         sender.sendMessage("New Max Claims: "+newmaxclaims);
         extraPlayerData.maxclaims = newmaxclaims;
