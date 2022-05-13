@@ -23,11 +23,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 public class AdminCommand extends CommandHandler {
 
-    private MongoDB database;
-    private DiscordBot discordBot;
+    private final MongoDB database;
+    private final DiscordBot discordBot;
 
     protected AdminCommand(SurvivalPlugin plugin, CommandManager commandManager) {
         super(plugin, commandManager);
@@ -120,7 +122,7 @@ public class AdminCommand extends CommandHandler {
                     literal("end-gateway").
                     argument(BooleanArgument.of("bool")).
                     permission("survivalplugin.admin.portal.end-gateway").
-                    handler(this::setEnableEndGateway));;
+                    handler(this::setEnableEndGateway));
         commandManager.command(commandManager.commandBuilder("admin").
                 literal("portal").
                     literal("nether").
@@ -204,9 +206,7 @@ public class AdminCommand extends CommandHandler {
         plugin.getConfig().set("tab.header", headerString);
         plugin.saveConfig();
 
-        context.getSender().getServer().getOnlinePlayers().forEach(player -> {
-            player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(headerString));
-        });
+        context.getSender().getServer().getOnlinePlayers().forEach(player -> player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(headerString)));
     }
 
     private void footer(CommandContext<CommandSender> context){
@@ -215,9 +215,7 @@ public class AdminCommand extends CommandHandler {
         plugin.getConfig().set("tab.footer", footerString);
         plugin.saveConfig();
 
-        context.getSender().getServer().getOnlinePlayers().forEach(player -> {
-            player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(footerString));
-        });
+        context.getSender().getServer().getOnlinePlayers().forEach(player -> player.sendPlayerListHeader(MiniMessage.miniMessage().deserialize(footerString)));
     }
 
     private void teleportChunk(CommandContext<CommandSender> context) {
@@ -243,7 +241,7 @@ public class AdminCommand extends CommandHandler {
     private void addMaxClaims(CommandContext<CommandSender> context) {
         CommandSender sender =  context.getSender();
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(context.get("player"));
-        Integer newmaxclaims = (Integer) context.get("claims") + extraPlayerData.maxclaims;
+        int newmaxclaims = (Integer) context.get("claims") + extraPlayerData.maxclaims;
         sender.sendMessage("Old Max Claims: "+extraPlayerData.maxclaims);
         sender.sendMessage("New Max Claims: "+newmaxclaims);
         extraPlayerData.maxclaims = newmaxclaims;
@@ -289,7 +287,7 @@ public class AdminCommand extends CommandHandler {
             Chunk bukkit_chunk =  plugin.claimManager.getChunk(chunk);
             if(plugin.claimManager.getOwner(bukkit_chunk) == null)
                 context.getSender().sendMessage("Wrong Player owns this Chunk");
-            else if(plugin.claimManager.getOwner(bukkit_chunk).equals(player)){
+            else if(plugin.claimManager.getOwner(bukkit_chunk).equals(player.getUniqueId())){
                 plugin.claimManager.forceUnClaimChunk(bukkit_chunk);
                 context.getSender().sendMessage("Unclaimed Chunk. "+chunk.x +" "+ chunk.z);
             }else {
@@ -316,17 +314,19 @@ public class AdminCommand extends CommandHandler {
             location = location.hoverEvent(HoverEvent.showText(Component.text("Click to TP")));
             location = location.clickEvent(ClickEvent.runCommand("/admin tpchunk "+ chunk.x + " "+ chunk.z));
             sender.sendMessage(location);
-            if(plugin.claimManager.getOwner(plugin.claimManager.getChunk(chunk)) != null){
-                sender.sendMessage("   Owner: "+ plugin.claimManager.getOwner(plugin.claimManager.getChunk(chunk)).getName());
+            UUID owner = plugin.claimManager.getOwner(plugin.claimManager.getChunk(chunk));
+            if(owner != null){
+                sender.sendMessage("   Owner (UUID): "+owner);
+                sender.sendMessage("   Owner (Name): "+ plugin.getServer().getOfflinePlayer(owner).getName());
             }else {
                 sender.sendMessage("   Owner: (NOT FOUND)");
             }
 
-            List<OfflinePlayer> trustedPlayers = plugin.claimManager.getTrustedList(plugin.claimManager.getChunk(chunk));
+            List<UUID> trustedPlayers = plugin.claimManager.getTrustedList(plugin.claimManager.getChunk(chunk));
             if(trustedPlayers.size() >= 1){
                 sender.sendMessage("   Trusted: ");
-                for(OfflinePlayer trusted: trustedPlayers){
-                    sender.sendMessage("      "+ trusted.getName());
+                for(UUID trusted: trustedPlayers){
+                    sender.sendMessage("      "+ plugin.getServer().getOfflinePlayer(trusted).getName());
                 }
             }
         }
@@ -384,7 +384,7 @@ public class AdminCommand extends CommandHandler {
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
         extraPlayerData.vip = true;
         plugin.claimManager.setExtraPlayerData(player, extraPlayerData);
-        context.getSender().sendMessage(Component.text(player.getName()).append(Component.text(" is now VIP")));
+        context.getSender().sendMessage(Component.text(Objects.requireNonNullElse(player.getName(), player.getUniqueId().toString())).append(Component.text(" is now VIP")));
     }
 
     private void vipRemove(CommandContext<CommandSender> context){
@@ -392,7 +392,7 @@ public class AdminCommand extends CommandHandler {
         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(player);
         extraPlayerData.vip = false;
         plugin.claimManager.setExtraPlayerData(player, extraPlayerData);
-        context.getSender().sendMessage(Component.text(player.getName()).append(Component.text(" is no longer VIP")));
+        context.getSender().sendMessage(Component.text(Objects.requireNonNullElse(player.getName(), player.getUniqueId().toString())).append(Component.text(" is no longer VIP")));
     }
 }
 

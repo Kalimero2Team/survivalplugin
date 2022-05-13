@@ -17,7 +17,7 @@ public class ClaimManager {
     public NamespacedKey owner_key;
     public NamespacedKey trusted_key;
     public NamespacedKey teamclaim_key;
-    private SurvivalPlugin plugin;
+    private final SurvivalPlugin plugin;
 
     public ClaimManager(SurvivalPlugin plugin){
         this.plugin = plugin;
@@ -34,19 +34,31 @@ public class ClaimManager {
         return chunk.getPersistentDataContainer().has(teamclaim_key, PersistentDataType.STRING);
     }
 
-    public OfflinePlayer getOwner(Chunk chunk){
+    public UUID getOwner(Chunk chunk){
         String string = chunk.getPersistentDataContainer().get(owner_key, PersistentDataType.STRING);
         if(string != null){
-            return plugin.getServer().getOfflinePlayer(UUID.fromString(string));
+            return UUID.fromString(string);
         }
         return null;
     }
 
-    public List<OfflinePlayer> getTrustedList(Chunk chunk){
-        List<OfflinePlayer> trustList = new ArrayList<>();
-        if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
-            List<OfflinePlayer> list =  Arrays.stream(chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)).toList();
-            trustList = new ArrayList<>(list); // http://stackoverflow.com/questions/5755477/ddg#5755510
+    public List<UUID> getTrustedList(Chunk chunk){
+        List<UUID> trustList;
+        if(chunk.getPersistentDataContainer().has(trusted_key, DataType.STRING_ARRAY)){
+            trustList = new ArrayList<>();
+            Arrays.stream(Objects.requireNonNull(chunk.getPersistentDataContainer().get(trusted_key, DataType.STRING_ARRAY))).forEach(uuid -> trustList.add(UUID.fromString(uuid)));
+        }else if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
+            trustList = new ArrayList<>();
+            OfflinePlayer[] offlinePlayers = chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY);
+            if(offlinePlayers != null){
+                for(OfflinePlayer offlinePlayer : offlinePlayers){
+                    trustList.add(offlinePlayer.getUniqueId());
+                }
+            }
+            chunk.getPersistentDataContainer().set(trusted_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
+
+        }else {
+            trustList = new ArrayList<>();
         }
 
         return trustList;
@@ -60,31 +72,31 @@ public class ClaimManager {
     }
 
     public boolean trust(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(this.getTrustedList(chunk).contains(offlinePlayer)){
+        if(this.getTrustedList(chunk).contains(offlinePlayer.getUniqueId())){
             return false;
         }
 
-        List<OfflinePlayer> trustList = getTrustedList(chunk);
-        trustList.add(offlinePlayer);
-        chunk.getPersistentDataContainer().set(trusted_key, DataType.OFFLINE_PLAYER_ARRAY , trustList.toArray(new OfflinePlayer[0]));
+        List<UUID> trustList = getTrustedList(chunk);
+        trustList.add(offlinePlayer.getUniqueId());
+        chunk.getPersistentDataContainer().set(trusted_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
         return true;
     }
 
     public boolean unTrust(Chunk chunk, OfflinePlayer offlinePlayer){
-        if(!this.getTrustedList(chunk).contains(offlinePlayer)){
+        if(!this.getTrustedList(chunk).contains(offlinePlayer.getUniqueId())){
             return false;
         }
 
-        List<OfflinePlayer> trustList = getTrustedList(chunk);
-        trustList.remove(offlinePlayer);
-        chunk.getPersistentDataContainer().set(trusted_key, DataType.OFFLINE_PLAYER_ARRAY , trustList.toArray(new OfflinePlayer[0]));
+        List<UUID> trustList = getTrustedList(chunk);
+        trustList.remove(offlinePlayer.getUniqueId());
+        chunk.getPersistentDataContainer().set(trusted_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
         return true;
     }
 
     public boolean canModify(Chunk chunk, OfflinePlayer offlinePlayer){
         if(this.isClaimed(chunk)){
-            if(!this.getOwner(chunk).equals(offlinePlayer)){
-                return this.getTrustedList(chunk).contains(offlinePlayer);
+            if(!this.getOwner(chunk).equals(offlinePlayer.getUniqueId())){
+                return this.getTrustedList(chunk).contains(offlinePlayer.getUniqueId());
             }
         }
         return true;
@@ -114,7 +126,7 @@ public class ClaimManager {
 
     public boolean unClaimChunk(Chunk chunk, OfflinePlayer offlinePlayer){
         if(this.isClaimed(chunk)){
-            if(this.getOwner(chunk).equals(offlinePlayer)){
+            if(this.getOwner(chunk).equals(offlinePlayer.getUniqueId())){
                 return forceUnClaimChunk(chunk);
             }
         }
@@ -124,9 +136,10 @@ public class ClaimManager {
     public boolean forceUnClaimChunk(Chunk chunk){
         if(this.isClaimed(chunk)){
             try {
-                ExtraPlayerData extraPlayerData = getExtraPlayerData(getOwner(chunk));
+                OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(getOwner(chunk));
+                ExtraPlayerData extraPlayerData = getExtraPlayerData(offlinePlayer);
                 extraPlayerData.chunks.remove(getSerializableChunk(chunk));
-                setExtraPlayerData(getOwner(chunk), extraPlayerData);
+                setExtraPlayerData(offlinePlayer, extraPlayerData);
             }catch (Exception exception){
                 exception.printStackTrace();
             }
@@ -144,7 +157,7 @@ public class ClaimManager {
     }
 
     public ExtraPlayerData getExtraPlayerData(OfflinePlayer offlinePlayer){
-        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId().toString() + ".json");
+        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId() + ".json");
         if(!file.exists()){
             return new ExtraPlayerData(new HashSet<>(), plugin.getConfig().getInt("claim.max-claims"),false);
         }
@@ -152,7 +165,7 @@ public class ClaimManager {
     }
 
     public void setExtraPlayerData(OfflinePlayer offlinePlayer, ExtraPlayerData extraPlayerData){
-        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId().toString() + ".json");
+        File file = new File(plugin.playerDataFolder + "/"+ offlinePlayer.getUniqueId() + ".json");
         extraPlayerData.saveData(file.getAbsolutePath());
     }
 
