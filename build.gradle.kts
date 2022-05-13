@@ -18,12 +18,11 @@ repositories {
 }
 
 dependencies {
-    bukkitLibrary("com.google.code.gson","gson","2.8.9")
+    bukkitLibrary("com.google.code.gson","gson","2.9.0")
     bukkitLibrary("commons-io","commons-io","2.11.0")
-    bukkitLibrary("org.apache.logging.log4j","log4j-core","2.17.1")
     compileOnly("io.papermc.paper","paper-api","1.18.2-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
-    implementation("org.mongodb","mongodb-driver-sync","4.5.1")
+    implementation("org.mongodb","mongodb-driver-sync","4.6.0")
     implementation("org.javacord","javacord","3.4.0")
     implementation("cloud.commandframework","cloud-paper","1.6.2")
     implementation("de.jeff_media","MorePersistentDataTypes","1.0.0")
@@ -50,7 +49,6 @@ tasks {
         reloc("cloud.commandframework")
         reloc("io.leangen")
         reloc("de.jeff_media")
-
 
         archiveFileName.set("SurvivalPlugin.jar")
     }

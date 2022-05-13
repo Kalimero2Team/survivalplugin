@@ -14,15 +14,17 @@ import java.util.*;
 
 public class ClaimManager {
 
-    public NamespacedKey owner_key;
-    public NamespacedKey trusted_key;
-    public NamespacedKey teamclaim_key;
+    private final NamespacedKey owner_key;
+    private final NamespacedKey legacy_trusted_key;
+    private final NamespacedKey trustlist_key;
+    private final NamespacedKey teamclaim_key;
     private final SurvivalPlugin plugin;
 
     public ClaimManager(SurvivalPlugin plugin){
         this.plugin = plugin;
         owner_key = new NamespacedKey(plugin, "owner");
-        trusted_key = new NamespacedKey(plugin, "trusted");
+        legacy_trusted_key = new NamespacedKey(plugin, "trusted");
+        trustlist_key = new NamespacedKey(plugin, "trustList");
         teamclaim_key = new NamespacedKey(plugin, "teamclaim");
     }
 
@@ -44,18 +46,19 @@ public class ClaimManager {
 
     public List<UUID> getTrustedList(Chunk chunk){
         List<UUID> trustList;
-        if(chunk.getPersistentDataContainer().has(trusted_key, DataType.STRING_ARRAY)){
+        if(chunk.getPersistentDataContainer().has(trustlist_key, DataType.STRING_ARRAY)){
             trustList = new ArrayList<>();
-            Arrays.stream(Objects.requireNonNull(chunk.getPersistentDataContainer().get(trusted_key, DataType.STRING_ARRAY))).forEach(uuid -> trustList.add(UUID.fromString(uuid)));
-        }else if(chunk.getPersistentDataContainer().has(trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
+            Arrays.stream(Objects.requireNonNull(chunk.getPersistentDataContainer().get(trustlist_key, DataType.STRING_ARRAY))).forEach(uuid -> trustList.add(UUID.fromString(uuid)));
+        }else if(chunk.getPersistentDataContainer().has(legacy_trusted_key, DataType.OFFLINE_PLAYER_ARRAY)){
             trustList = new ArrayList<>();
-            OfflinePlayer[] offlinePlayers = chunk.getPersistentDataContainer().get(trusted_key, DataType.OFFLINE_PLAYER_ARRAY);
+            OfflinePlayer[] offlinePlayers = chunk.getPersistentDataContainer().get(legacy_trusted_key, DataType.OFFLINE_PLAYER_ARRAY);
             if(offlinePlayers != null){
                 for(OfflinePlayer offlinePlayer : offlinePlayers){
                     trustList.add(offlinePlayer.getUniqueId());
                 }
             }
-            chunk.getPersistentDataContainer().set(trusted_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
+            chunk.getPersistentDataContainer().set(trustlist_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
+            plugin.getLogger().info("Converted trust list of chunk " + chunk.getX() + "," + chunk.getZ() + " in World "+ chunk.getWorld().getName() +" to string based array");
 
         }else {
             trustList = new ArrayList<>();
@@ -78,7 +81,7 @@ public class ClaimManager {
 
         List<UUID> trustList = getTrustedList(chunk);
         trustList.add(offlinePlayer.getUniqueId());
-        chunk.getPersistentDataContainer().set(trusted_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
+        chunk.getPersistentDataContainer().set(trustlist_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
         return true;
     }
 
@@ -89,7 +92,7 @@ public class ClaimManager {
 
         List<UUID> trustList = getTrustedList(chunk);
         trustList.remove(offlinePlayer.getUniqueId());
-        chunk.getPersistentDataContainer().set(trusted_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
+        chunk.getPersistentDataContainer().set(trustlist_key, DataType.STRING_ARRAY, trustList.stream().map(UUID::toString).toArray(String[]::new));
         return true;
     }
 
@@ -144,7 +147,8 @@ public class ClaimManager {
                 exception.printStackTrace();
             }
             chunk.getPersistentDataContainer().remove(owner_key);
-            chunk.getPersistentDataContainer().remove(trusted_key);
+            chunk.getPersistentDataContainer().remove(legacy_trusted_key);
+            chunk.getPersistentDataContainer().remove(trustlist_key);
             chunk.getPersistentDataContainer().remove(teamclaim_key);
 
             return true;
