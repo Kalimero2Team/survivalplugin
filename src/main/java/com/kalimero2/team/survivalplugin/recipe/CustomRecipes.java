@@ -50,5 +50,7 @@ public class CustomRecipes implements Listener {
         shulkershellRecipe.shape(" A ","ABA"," A ");
         shulkershellRecipe.shape('A', Material.NETHERITE_INGOR);
         shulkershellRecipe.shape('B', Material.PAPER);
+        return shulkershellRecipe
+    }
 
 }
