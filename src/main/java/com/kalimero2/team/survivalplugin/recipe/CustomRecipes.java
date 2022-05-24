@@ -16,6 +16,7 @@ public class CustomRecipes implements Listener {
     public CustomRecipes(SurvivalPlugin plugin){
         this.plugin = plugin;
         plugin.getServer().addRecipe(getElytraRecipe());
+        plugin.getServer().addRecipe(getShulkerShellRecipe());
         plugin.getServer().getPluginManager().registerEvents(this,plugin);
     }
 
@@ -23,6 +24,10 @@ public class CustomRecipes implements Listener {
     public void onJoin(PlayerJoinEvent event){
         if(!event.getPlayer().hasDiscoveredRecipe(getElytraRecipe().getKey())){
             event.getPlayer().discoverRecipe(getElytraRecipe().getKey());
+        }
+        
+        if(!event.getPlayer().hasDiscoveredRecipe(getShulkerShellRecipe().getKey())){
+            event.getPlayer().discoverRecipe(getShulkerShellRecipe().getKey());
         }
     }
 
@@ -37,5 +42,13 @@ public class CustomRecipes implements Listener {
         elytraRecipe.setIngredient('#', Material.AIR);
         return elytraRecipe;
     }
+    
+    public ShapedRecipe getShulkerShellRecipe() {
+        ItemStack shulkershell = new ItemStack(Material.SHULKER_SHELL);
+        NamespacedKey shulkershellKey = new NamespacedKey(plugin,"shulkershell");
+        ShapedRecipe shulkershellRecipe = new ShapedRecipe(shulkershellkey, shulkershell);
+        shulkershellRecipe.shape(" A ","ABA"," A ");
+        shulkershellRecipe.shape('A', Material.NETHERITE_INGOR);
+        shulkershellRecipe.shape('B', Material.PAPER);
 
 }
