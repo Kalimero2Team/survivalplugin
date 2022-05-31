@@ -23,7 +23,9 @@ dependencies {
     compileOnly("io.papermc.paper","paper-api","1.18.2-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate","api","2.0-SNAPSHOT")
     implementation("org.mongodb","mongodb-driver-sync","4.6.0")
-    implementation("org.javacord","javacord","3.4.0")
+    implementation("net.dv8tion:JDA:5.0.0-alpha.12") {
+        exclude(module= "opus-java")
+    }
     implementation("cloud.commandframework","cloud-paper","1.6.2")
     implementation("de.jeff_media","MorePersistentDataTypes","1.0.0")
 }

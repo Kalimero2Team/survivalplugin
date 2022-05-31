@@ -25,8 +25,6 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.inventory.ItemStack;
-import org.javacord.api.entity.permission.Role;
 
 import java.util.*;
 
@@ -182,7 +180,7 @@ public class MainListener implements Listener {
                 database.updateUser(minecraftUser);
             }else {
                 discordBot.discordTrustList.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
-                    if(plugin.getConfig().getStringList("vip_roles").contains(role.getIdAsString())){
+                    if(plugin.getConfig().getStringList("vip_roles").contains(role.getId())){
                         ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
                         extraPlayerData.vip = true;
                         plugin.claimManager.setExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()), extraPlayerData);

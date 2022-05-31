@@ -1,86 +1,74 @@
 package com.kalimero2.team.survivalplugin.discord;
 
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
+import com.kalimero2.team.survivalplugin.database.MongoDB;
 import com.kalimero2.team.survivalplugin.database.pojo.MinecraftUser;
-import org.javacord.api.DiscordApi;
-import org.javacord.api.DiscordApiBuilder;
-import org.javacord.api.entity.activity.ActivityType;
-import org.javacord.api.entity.permission.PermissionsBuilder;
-import org.javacord.api.entity.server.Server;
-import org.javacord.api.entity.user.User;
-import org.javacord.api.interaction.*;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.UUID;
 
-public class DiscordBot {
+public class DiscordBot extends ListenerAdapter {
 
-    private DiscordApi discordApi;
+    private final JDA jda;
     public DiscordTrustList discordTrustList;
     private final SurvivalPlugin plugin;
 
     public DiscordBot(String token, SurvivalPlugin plugin) throws LoginException {
         this.plugin = plugin;
-        discordApi = new DiscordApiBuilder().setToken(token).setAllIntents().login().join();
-        plugin.getLogger().info(discordApi.createBotInvite(new PermissionsBuilder().setAllAllowed().build()));
-        discordApi.updateActivity(ActivityType.PLAYING, "Minecraft");
-        discordTrustList = new DiscordTrustList(plugin, discordApi);
+        JDABuilder builder = JDABuilder.createDefault(token);
+        builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE);
+        builder.setBulkDeleteSplittingEnabled(false);
+        builder.disableIntents(GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MESSAGE_TYPING);
+        builder.enableIntents(GatewayIntent.GUILD_MESSAGES);
+        builder.setLargeThreshold(50);
+        builder.addEventListeners(this);
+        builder.setActivity(Activity.playing("Minecraft"));
+        jda = builder.build();
+        discordTrustList = new DiscordTrustList(plugin, jda);
 
-        Optional<Server> server = discordApi.getServerById(plugin.getConfig().getString("discord.server"));
-        if(server.isPresent()){
-            SlashCommand command;
-            if(discordApi.getServerSlashCommands(server.get()).join().stream().noneMatch(slashCommand -> slashCommand.getName().equals("minecraft"))){
-                command = SlashCommand.with("minecraft","Minecraft User Lookup").addOption(SlashCommandOption.createUserOption("discordUser","User",true)).setDefaultPermission(false).createForServer(server.get()).join();
-            }else {
-                command = discordApi.getServerSlashCommands(server.get()).join().stream().filter(slashCommand -> slashCommand.getName().equals("minecraft")).findFirst().orElse(null);
-            }
-            if(command != null){
-                List<ApplicationCommandPermissions> commandPermissions = new ArrayList<>();
-                for(long id:plugin.getConfig().getLongList("admin-roles")){
-                    commandPermissions.add(ApplicationCommandPermissions.create(id, ApplicationCommandPermissionType.ROLE, true));
-                }
-                new ApplicationCommandPermissionsUpdater(server.get()).setPermissions(commandPermissions).update(command.getId());
-                discordApi.addSlashCommandCreateListener(event -> {
-                    SlashCommandInteraction slashCommandInteraction = event.getSlashCommandInteraction();
-                    User user = slashCommandInteraction.getOptionUserValueByName("discordUser").orElse(null);
-                    if(user != null){
-                        List<MinecraftUser> minecraftUsers = plugin.getDatabase().getUsers(user.getIdAsString());
-                        StringBuilder message = new StringBuilder("Minecraft Account(s): ");
-                        minecraftUsers.forEach(minecraftUser -> {
-                            message.append(plugin.getServer().getOfflinePlayer(UUID.fromString(minecraftUser.getUuid())).getName()).append(" ");
-                        });
-                        slashCommandInteraction.createImmediateResponder().setContent(message.toString()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
-                    }
-                });
-            }
-            }
+
+        jda.upsertCommand("minecraft", "Minecraft User Lookup").queue();
+        String serverId = plugin.getConfig().getString("discord.server");
+        if(serverId == null){
+            plugin.getLogger().severe("No server id found in config.yml");
+            return;
+        }
+        Guild guild = jda.getGuildById(serverId);
+        if(guild != null){
+            guild.upsertCommand("minecraft", "Minecraft User Lookup").queue();
+        }else{
+            plugin.getLogger().severe("Could not find server with id " + serverId);
+        }
 
     }
 
-    public CompletableFuture<Void> disconnect(){
-        return discordApi.disconnect();
+    public void disconnect(){
+        jda.shutdownNow();
     }
 
-    private CompletableFuture<Void> deleteAllSlashCommands(DiscordApi api) {
-        var deleteFuture = api.getGlobalSlashCommands()
-                .thenComposeAsync(sc -> CompletableFuture.allOf(sc.stream()
-                        .map(SlashCommand::deleteGlobal)
-                        .toList().toArray(new CompletableFuture[0])
-                ));
-        var serverDeleteFutures = api.getServers().stream().map(server -> {
-                    return server.getSlashCommands()
-                            .thenComposeAsync(sc -> CompletableFuture.allOf(sc.stream()
-                                    .map(c -> {
-                                        return c.deleteForServer(server);
-                                    })
-                                    .toList().toArray(new CompletableFuture[0])
-                            ));
-                })
-                .toList();
-        return CompletableFuture.allOf(serverDeleteFutures.toArray(new CompletableFuture[0]))
-                .thenComposeAsync(unused -> deleteFuture);
-    }
 
+    @Override
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
+        MongoDB database = plugin.getDatabase();
+        if (event.getName().equals("minecraft") && database != null) {
+            User user = event.getUser();
+            List<MinecraftUser> minecraftUsers = database.getUsers(user.getId());
+            StringBuilder message = new StringBuilder("Minecraft Account(s): ");
+            minecraftUsers.forEach(minecraftUser -> message.append(plugin.getServer().getOfflinePlayer(UUID.fromString(minecraftUser.getUuid())).getName()).append(" "));
+            event.reply(message.toString()).setEphemeral(true).queue();
+        }else{
+            event.reply("I can't handle that command right now :(").setEphemeral(true).queue();
+            plugin.getLogger().warning("Unhandled command " + event.getName());
+        }
+    }
 }

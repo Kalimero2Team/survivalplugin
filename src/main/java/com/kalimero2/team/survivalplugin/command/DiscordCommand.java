@@ -5,12 +5,11 @@ import cloud.commandframework.context.CommandContext;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.database.MongoDB;
+import net.dv8tion.jda.api.entities.Member;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.javacord.api.entity.user.User;
-
 
 public class DiscordCommand extends CommandHandler {
 
@@ -34,10 +33,13 @@ public class DiscordCommand extends CommandHandler {
         if(context.getSender() instanceof Player player){
             OfflinePlayer target = context.getOrDefault("player",player);
 
-            User user = discordBot.discordTrustList.getMember(database.getUser(target.getUniqueId()).getDiscordUser());
-            String name = user.getDiscriminatedName();
-            String id = user.getIdAsString();
-            plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name",name),Placeholder.unparsed("discord_id",id));
+            Member member;
+            if (target != null) {
+                member = discordBot.discordTrustList.getMember(database.getUser(target.getUniqueId()).getDiscordUser());
+                String name = member.getUser().getName()+"#"+member.getUser().getDiscriminator();
+                String id = member.getId();
+                plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name",name),Placeholder.unparsed("discord_id",id));
+            }
         }
     }
 

@@ -48,8 +48,8 @@ public final class SurvivalPlugin extends JavaPlugin {
 
         this.playerDataFolder = new File(this.getDataFolder()+ "/playerdata/");
 
-        if(!playerDataFolder.exists()){
-            playerDataFolder.mkdirs();
+        if(playerDataFolder.mkdirs()){
+            plugin.getLogger().info("Created playerdata folder");
         }
 
         try{
@@ -99,7 +99,7 @@ public final class SurvivalPlugin extends JavaPlugin {
     public void startDiscordBot(){
         try {
             if(this.discordBot != null){
-                this.discordBot.disconnect().join();
+                this.discordBot.disconnect();
                 this.discordBot = null;
             }
             this.discordBot = new DiscordBot(plugin.getConfig().getString("discord.token"), plugin);
