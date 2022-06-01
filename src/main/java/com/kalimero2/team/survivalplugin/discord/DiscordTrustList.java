@@ -114,54 +114,48 @@ public class DiscordTrustList extends ListenerAdapter {
 
                     String code = event.getMessage().getContentStripped();
 
-                    if(code.matches("-?\\d+")){
+                    if(code.matches("-?\\d+")) {
+                        MinecraftUser user = plugin.codeIdMap.get(code);
+                        plugin.codeIdMap.remove(code);
 
-                        for(Map.Entry<String,MinecraftUser> entry: plugin.codeIdMap.entrySet()){
-                            if(code.equals(entry.getKey())){
-                                MinecraftUser user = entry.getValue();
+                        user.setDiscordUser(new DiscordUser(event.getMessage().getAuthor().getId()));
+                        database.updateUser(user);
 
-                                plugin.codeIdMap.remove(code);
-                                user.setDiscordUser(new DiscordUser(event.getMessage().getAuthor().getId()));
-                                database.updateUser(user);
+                        StringBuilder rules = new StringBuilder(plugin.messageUtil.getString("message.discord.rules_message"));
+                        for (String rule : plugin.getConfig().getStringList("rules")) {
+                            rules.append("\n").append(rule);
+                        }
 
-                                StringBuilder rules = new StringBuilder(plugin.messageUtil.getString("message.discord.rules_message"));
-                                for(String rule:plugin.getConfig().getStringList("rules")){
-                                    rules.append("\n").append(rule);
-                                }
-
-                                List<MinecraftUser> alts = database.getUserAlts(user);
-                                int java = 0;
-                                int bedrock = 0;
-                                for(MinecraftUser alt:alts){
-                                    if(alt.isBedrock()){
-                                        bedrock += 1;
-                                    }else{
-                                        java += 1;
-                                    }
-                                }
-
-                                if(bedrock > 1 && user.isBedrock()){
-                                    user.setDiscordUser(null);
-                                    database.updateUser(user);
-                                    event.getChannel().sendMessage(plugin.messageUtil.getString("message.discord.max_bedrock")).queue();
-                                    return;
-                                }if(java > 1 && !user.isBedrock()){
-                                    user.setDiscordUser(null);
-                                    database.updateUser(user);
-                                    event.getChannel().sendMessage(plugin.messageUtil.getString("message.discord.max_java")).queue();
-                                    return;
-                                }
-
-                                event.getChannel().sendMessage(rules).setActionRows(
-                                        ActionRow.of(Button.success("accept", plugin.messageUtil.getString("message.discord.accept")),
-                                                Button.danger("deny", plugin.messageUtil.getString("message.discord.deny")))
-                                ).queue();
-
-
+                        List<MinecraftUser> alts = database.getUserAlts(user);
+                        int java = 0;
+                        int bedrock = 0;
+                        for (MinecraftUser alt : alts) {
+                            if (alt.isBedrock()) {
+                                bedrock += 1;
+                            } else {
+                                java += 1;
                             }
                         }
-                    }
 
+                        if (bedrock > 1 && user.isBedrock()) {
+                            user.setDiscordUser(null);
+                            database.updateUser(user);
+                            event.getChannel().sendMessage(plugin.messageUtil.getString("message.discord.max_bedrock")).queue();
+                            return;
+                        }
+                        if (java > 1 && !user.isBedrock()) {
+                            user.setDiscordUser(null);
+                            database.updateUser(user);
+                            event.getChannel().sendMessage(plugin.messageUtil.getString("message.discord.max_java")).queue();
+                            return;
+                        }
+
+                        event.getChannel().sendMessage(rules).setActionRows(
+                                ActionRow.of(Button.success("accept", plugin.messageUtil.getString("message.discord.accept")),
+                                        Button.danger("deny", plugin.messageUtil.getString("message.discord.deny")))
+                        ).queue();
+
+                    }
                 }
             }
         }
@@ -243,7 +237,7 @@ public class DiscordTrustList extends ListenerAdapter {
                         channel.delete().queue();
                     }
                 }
-            }.runTaskLater(plugin, 20*30);
+            }.runTaskLater(plugin, 60);
 
         }
 
@@ -257,9 +251,10 @@ public class DiscordTrustList extends ListenerAdapter {
         }
         if(member == null){
             plugin.getLogger().warning("member not found");
-            return;
+        }else{
+            guild.addRoleToMember(member, whitelist_role).queue();
         }
-        guild.addRoleToMember(member, whitelist_role).queue();
+
     }
 
     public void removeDiscordUser(MinecraftUser user) {
@@ -290,23 +285,23 @@ public class DiscordTrustList extends ListenerAdapter {
     }
 
     @Nullable
-    public Member getMember(DiscordUser user){
+    public User getUser(DiscordUser user){
         if(user != null){
-            return guild.getMemberById(user.getDiscordId());
+            return jda.retrieveUserById(user.getDiscordId()).complete();
         }else {
             return null;
         }
     }
 
     public List<Role> getRoles(DiscordUser user){
-        Member member = guild.getMemberById(user.getDiscordId());
+        Member member = guild.retrieveMemberById(user.getDiscordId()).complete();
         if(member != null){
             return member.getRoles();
         }
-        return null;
+        return List.of();
     }
 
     public boolean checkDiscord(DiscordUser user){
-        return getMember(user) != null;
+        return getUser(user) != null;
     }
 }

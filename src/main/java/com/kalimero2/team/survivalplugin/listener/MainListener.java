@@ -3,6 +3,7 @@ package com.kalimero2.team.survivalplugin.listener;
 import com.destroystokyo.paper.event.server.PaperServerListPingEvent;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
+import com.kalimero2.team.survivalplugin.database.pojo.DiscordUser;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.util.ExtraPlayerData;
 import de.jeff_media.morepersistentdatatypes.DataType;
@@ -162,10 +163,11 @@ public class MainListener implements Listener {
 
         Optional<MinecraftUser> minecraftUserOptional = list.stream().filter(user -> Objects.equals(user.getUuid(), player.getId().toString())).findAny();
 
+        // Get the user from the database or create a new one in the database
         if(minecraftUserOptional.isEmpty()) {
             minecraftUser = database.getUser(player.getId());
-            boolean bedrock = plugin.floodgateApi.isFloodgatePlayer(player.getId());
             if(minecraftUser == null){
+                boolean bedrock = plugin.floodgateApi.isFloodgatePlayer(player.getId());
                 minecraftUser = new MinecraftUser(player.getId().toString(), player.getName(), bedrock, false);
                 database.addUser(minecraftUser);
             }
@@ -174,56 +176,24 @@ public class MainListener implements Listener {
             minecraftUser = minecraftUserOptional.get();
         }
 
+
         if(minecraftUser.isRulesAccepted()){
-            if(!discordBot.discordTrustList.checkDiscord(minecraftUser.getDiscordUser())){
-                minecraftUser.setDiscordUser(null);
+            if(minecraftUser.getDiscordUser() == null){ // If the database doesn't have a discord user -> Kick the player and unset accepted rules
                 minecraftUser.setRulesAccepted(false);
                 database.updateUser(minecraftUser);
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, plugin.messageUtil.getMessage("message.join.fail_no_user_linked"));
-            }else {
-                if (minecraftUser.getDiscordUser() != null) {
-                    discordBot.discordTrustList.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
-                        if(plugin.getConfig().getStringList("vip_roles").contains(role.getId())){
-                            ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
-                            extraPlayerData.vip = true;
-                            plugin.claimManager.setExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()), extraPlayerData);
-                        }
-                    });
-                }
+            }else{
+                checkAndAddVipRoles(player, minecraftUser.getDiscordUser());
             }
-        }else{
-            Map<String,MinecraftUser> codeIdMap = plugin.codeIdMap;
-
-            String randomCode = null;
-            boolean found = false;
-
-            for(Map.Entry<String,MinecraftUser> entry:codeIdMap.entrySet()){
-                if(entry.getValue().equals(minecraftUser)){
-                    randomCode = entry.getKey();
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found){
-                randomCode = String.format("%04d", random.nextInt(1001));
-
-                while (codeIdMap.containsKey(randomCode)){
-                    randomCode = String.format("%04d", random.nextInt(1001));
-                }
-            }
-
-            codeIdMap.put(randomCode, minecraftUser);
-
-            TagResolver.Single codetemplate = Placeholder.unparsed("code", randomCode);
-            Component message = plugin.messageUtil.getMessage("message.join.fail_whitelist",codetemplate);
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, message);
+        }
+        else{
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, getWhitelistCode(minecraftUser));
         }
 
         discordBot.discordTrustList.giveRole(minecraftUser);
 
-        if(!plugin.getServer().getOfflinePlayer(event.getUniqueId()).isOp()){
-            if(plugin.maintenance != null){
+        if(plugin.maintenance != null){
+            if(!plugin.getServer().getOfflinePlayer(event.getUniqueId()).isOp()){
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, plugin.maintenance);
             }
         }
@@ -234,6 +204,50 @@ public class MainListener implements Listener {
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, plugin.messageUtil.getMessage("vip_mode.kick"));
             }
         }
+    }
+
+    private void checkAndAddVipRoles(PlayerProfile player, DiscordUser user) {
+        if (discordBot.discordTrustList != null) {
+            discordBot.discordTrustList.getRoles(user).forEach(role -> {
+                if(plugin.getConfig().getStringList("vip_roles").contains(role.getId())){
+                    UUID uuid = player.getId();
+                    if(uuid != null){
+                        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(uuid));
+                        extraPlayerData.vip = true;
+                        plugin.claimManager.setExtraPlayerData(plugin.getServer().getOfflinePlayer(uuid), extraPlayerData);
+                    }
+                }
+            });
+        }
+    }
+
+    private Component getWhitelistCode(MinecraftUser minecraftUser) {
+        Map<String,MinecraftUser> codeIdMap = plugin.codeIdMap;
+
+        String randomCode = null;
+        boolean found = false;
+
+        for(Map.Entry<String,MinecraftUser> entry:codeIdMap.entrySet()){
+            if(entry.getValue().equals(minecraftUser)){
+                randomCode = entry.getKey();
+                found = true;
+                break;
+            }
+        }
+
+        if(!found){
+            randomCode = String.format("%04d", random.nextInt(1001));
+
+            while (codeIdMap.containsKey(randomCode)){
+                randomCode = String.format("%04d", random.nextInt(1001));
+            }
+        }
+
+        codeIdMap.put(randomCode, minecraftUser);
+
+        TagResolver.Single codeTemplate = Placeholder.unparsed("code", randomCode);
+
+        return plugin.messageUtil.getMessage("message.join.fail_whitelist",codeTemplate);
     }
 
     @EventHandler
