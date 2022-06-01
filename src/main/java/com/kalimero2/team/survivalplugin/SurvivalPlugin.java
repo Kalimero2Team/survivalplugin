@@ -66,7 +66,12 @@ public final class SurvivalPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        floodgateApi = FloodgateApi.getInstance();
+        if(plugin.getServer().getPluginManager().getPlugin("floodgate") != null){
+            floodgateApi = FloodgateApi.getInstance();
+        }else{
+            floodgateApi = null;
+        }
+        
 
         motd = this.getServer().motd();
 

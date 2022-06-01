@@ -39,7 +39,7 @@ bukkit {
     apiVersion = "1.18"
     load = BukkitPluginDescription.PluginLoadOrder.STARTUP
     authors = listOf("byquanton")
-    depend = listOf("floodgate")
+    softDepend = listOf("floodgate")
 }
 
 
