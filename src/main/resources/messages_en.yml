@@ -49,5 +49,6 @@ message:
   join:
     fail_whitelist: "You are not on the whitelist :(
     Your code is: <code>"
+    fail_no_user_linked: 'Error: Your Discord account was not found in the database. If the problem persists, contact an administrator.'
 vip_mode:
   kick: "Server is full. Current only <gold>VIP</gold> Players can join."

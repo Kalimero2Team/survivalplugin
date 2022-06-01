@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -106,7 +107,7 @@ public class DiscordTrustList extends ListenerAdapter {
             TextChannel textChannel = event.getTextChannel();
 
             if(textChannel.getParentCategory() != null){
-                if(textChannel.getId().equals(whitelist_channel) && textChannel.getParentCategory().getId().equals(whitelist_category)){
+                if(textChannel.getTopic() != null && textChannel.getTopic().equals(event.getAuthor().getId()) && textChannel.getParentCategory().getId().equals(whitelist_category)){
                     if(!textChannel.getName().equals("whitelist")){
                         return;
                     }
@@ -207,6 +208,9 @@ public class DiscordTrustList extends ListenerAdapter {
                 }
             }
 
+            if(textChannel != null){
+                event.reply(textChannel.getAsMention()).setEphemeral(true).queue();
+            }
 
         }else if(event.getChannel().getName().equals("whitelist")){
             if(event.getComponentId().equals("cancel")){
@@ -214,19 +218,32 @@ public class DiscordTrustList extends ListenerAdapter {
                 return;
             }
 
-            for(MinecraftUser user:database.getUsers(event.getUser().getId())){
-                if(event.getComponentId().equals("accept")){
-                    plugin.getLogger().info(event.getUser().getName() + "/"+user.getName()+" accepted the rules");
+            if(event.getComponentId().equals("accept")){
+                for(MinecraftUser user:database.getUsers(event.getUser().getId())){
                     user.setRulesAccepted(true);
                     database.updateUser(user);
-                    event.reply(plugin.messageUtil.getString("message.discord.rules_accepted")).setEphemeral(true).queue();
                     giveRole(user);
-                } else if (event.getComponentId().equals("deny")){
-                    plugin.getLogger().info(event.getUser().getName() + "/"+user.getName()+" denied the rules");
-                    removeDiscordUser(user);
-                    event.reply(plugin.messageUtil.getString("message.discord.rules_denied")).setEphemeral(true).queue();
                 }
+                plugin.getLogger().info(event.getUser().getName() + " accepted the rules");
+                event.reply(plugin.messageUtil.getString("message.discord.rules_accepted")).setEphemeral(true).queue();
+            } else if (event.getComponentId().equals("deny")){
+                for(MinecraftUser user:database.getUsers(event.getUser().getId())){
+                    removeDiscordUser(user);
+                }
+                plugin.getLogger().info(event.getUser().getName() + " denied the rules");
+                event.reply(plugin.messageUtil.getString("message.discord.rules_denied")).setEphemeral(true).queue();
             }
+
+            String id = event.getChannel().getId();
+            new BukkitRunnable(){
+                @Override
+                public void run() {
+                    TextChannel channel = jda.getTextChannelById(id);
+                    if (channel != null) {
+                        channel.delete().queue();
+                    }
+                }
+            }.runTaskLater(plugin, 20*30);
 
         }
 
@@ -234,7 +251,10 @@ public class DiscordTrustList extends ListenerAdapter {
     }
 
     public void giveRole(MinecraftUser user){
-        Member member = guild.getMemberById(user.getDiscordUser().getDiscordId());
+        Member member = null;
+        if (user.getDiscordUser() != null) {
+            member = guild.getMemberById(user.getDiscordUser().getDiscordId());
+        }
         if(member == null){
             plugin.getLogger().warning("member not found");
             return;
@@ -244,14 +264,13 @@ public class DiscordTrustList extends ListenerAdapter {
 
     public void removeDiscordUser(MinecraftUser user) {
         if(user != null){
-            Member member = guild.getMemberById(user.getDiscordUser().getDiscordId());
-            if(member == null){
-                plugin.getLogger().warning("member not found");
-                return;
+            if(user.getDiscordUser() != null && user.getDiscordUser().getDiscordId() != null){
+                Member member = guild.getMemberById(user.getDiscordUser().getDiscordId());
+                if(member != null){
+                    guild.removeRoleFromMember(member, whitelist_role).queue();
+                }
             }
-            if(user.getDiscordUser().getDiscordId() != null){
-                guild.removeRoleFromMember(member, whitelist_role).queue();
-            }
+
             user.setDiscordUser(null);
             user.setRulesAccepted(false);
             new BukkitRunnable(){
@@ -270,8 +289,13 @@ public class DiscordTrustList extends ListenerAdapter {
         }
     }
 
+    @Nullable
     public Member getMember(DiscordUser user){
-        return guild.getMemberById(user.getDiscordId());
+        if(user != null){
+            return guild.getMemberById(user.getDiscordId());
+        }else {
+            return null;
+        }
     }
 
     public List<Role> getRoles(DiscordUser user){

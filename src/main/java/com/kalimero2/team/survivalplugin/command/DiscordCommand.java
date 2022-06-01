@@ -3,6 +3,7 @@ package com.kalimero2.team.survivalplugin.command;
 import cloud.commandframework.bukkit.parsers.OfflinePlayerArgument;
 import cloud.commandframework.context.CommandContext;
 import com.kalimero2.team.survivalplugin.SurvivalPlugin;
+import com.kalimero2.team.survivalplugin.database.pojo.DiscordUser;
 import com.kalimero2.team.survivalplugin.discord.DiscordBot;
 import com.kalimero2.team.survivalplugin.database.MongoDB;
 import net.dv8tion.jda.api.entities.Member;
@@ -35,10 +36,17 @@ public class DiscordCommand extends CommandHandler {
 
             Member member;
             if (target != null) {
-                member = discordBot.discordTrustList.getMember(database.getUser(target.getUniqueId()).getDiscordUser());
-                String name = member.getUser().getName()+"#"+member.getUser().getDiscriminator();
-                String id = member.getId();
-                plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name",name),Placeholder.unparsed("discord_id",id));
+                DiscordUser discordUser = database.getUser(target.getUniqueId()).getDiscordUser();
+                if(discordUser != null){
+                    member = discordBot.discordTrustList.getMember(discordUser);
+                    if(member != null){
+                        String name = member.getUser().getName()+"#"+member.getUser().getDiscriminator();
+                        String id = member.getId();
+                        plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name",name),Placeholder.unparsed("discord_id",id));
+                    }else{
+                        plugin.messageUtil.sendMessage(player, "message.command.discord.info", Placeholder.unparsed("discord_name","null"),Placeholder.unparsed("discord_id","null"));
+                    }
+                }
             }
         }
     }

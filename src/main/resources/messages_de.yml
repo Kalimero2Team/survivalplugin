@@ -49,5 +49,6 @@ message:
     add: 'Zur Whitelist hinzufügen'
   join:
     fail_whitelist: 'Um diesen Server beizutreten, gib den Code <bold><code></bold> auf dem Discord ein. (<bold>INVITE EINFÜGEN</bold>)'
+    fail_no_user_linked: 'Fehler: In der Datenbank wurde dein Discord Account nicht gefunden. Falls das Problem weiterhin besteht, wende dich an einen Administrator.'
 vip_mode:
   kick: "Server ist voll. Es können aktuell nur <gold>VIP</gold> Spieler joinen."

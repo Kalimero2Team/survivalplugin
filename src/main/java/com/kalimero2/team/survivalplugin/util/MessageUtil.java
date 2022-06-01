@@ -9,20 +9,28 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
 
 public class MessageUtil {
 
-    private final SurvivalPlugin plugin;
-    private FileConfiguration messageConfiguration;
+    private final FileConfiguration externalConfig;
+    private final FileConfiguration internalConfig;
 
     public MessageUtil(SurvivalPlugin plugin, File messageConfig){
-        this.plugin = plugin;
         if (!messageConfig.exists()) {
             plugin.saveResource(messageConfig.getName(), false);
         }
-        messageConfiguration = YamlConfiguration.loadConfiguration(messageConfig);
+        externalConfig = YamlConfiguration.loadConfiguration(messageConfig);
+
+        InputStream inputStream = plugin.getResource(messageConfig.getName());
+
+        assert inputStream != null;
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+        internalConfig = YamlConfiguration.loadConfiguration(inputStreamReader);
+
     }
 
     public void sendMessage(CommandSender sender, String configString, TagResolver... tagResolvers){
@@ -35,10 +43,18 @@ public class MessageUtil {
 
 
     public String getString(String configString){
-        return Objects.requireNonNullElse(messageConfiguration.getString(configString), configString);
+        if(externalConfig.contains(configString)){
+            return externalConfig.getString(configString);
+        }else {
+            return internalConfig.getString(configString);
+        }
     }
 
     public List<String> getStrings(String configString){
-        return Objects.requireNonNullElse(messageConfiguration.getStringList(configString), List.of(configString));
+        if(externalConfig.contains(configString)){
+            return externalConfig.getStringList(configString);
+        }else {
+            return internalConfig.getStringList(configString);
+        }
     }
 }

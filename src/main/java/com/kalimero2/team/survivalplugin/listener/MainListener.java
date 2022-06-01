@@ -177,15 +177,19 @@ public class MainListener implements Listener {
         if(minecraftUser.isRulesAccepted()){
             if(!discordBot.discordTrustList.checkDiscord(minecraftUser.getDiscordUser())){
                 minecraftUser.setDiscordUser(null);
+                minecraftUser.setRulesAccepted(false);
                 database.updateUser(minecraftUser);
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, plugin.messageUtil.getMessage("message.join.fail_no_user_linked"));
             }else {
-                discordBot.discordTrustList.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
-                    if(plugin.getConfig().getStringList("vip_roles").contains(role.getId())){
-                        ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
-                        extraPlayerData.vip = true;
-                        plugin.claimManager.setExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()), extraPlayerData);
-                    }
-                });
+                if (minecraftUser.getDiscordUser() != null) {
+                    discordBot.discordTrustList.getRoles(minecraftUser.getDiscordUser()).forEach(role -> {
+                        if(plugin.getConfig().getStringList("vip_roles").contains(role.getId())){
+                            ExtraPlayerData extraPlayerData = plugin.claimManager.getExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()));
+                            extraPlayerData.vip = true;
+                            plugin.claimManager.setExtraPlayerData(plugin.getServer().getOfflinePlayer(player.getId()), extraPlayerData);
+                        }
+                    });
+                }
             }
         }else{
             Map<String,MinecraftUser> codeIdMap = plugin.codeIdMap;

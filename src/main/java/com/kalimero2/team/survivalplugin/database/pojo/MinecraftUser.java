@@ -1,6 +1,7 @@
 package com.kalimero2.team.survivalplugin.database.pojo;
 
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -76,6 +77,7 @@ public class MinecraftUser {
         this.discordUser = discordUser;
     }
 
+    @Nullable
     public DiscordUser getDiscordUser() {
         return discordUser;
     }
