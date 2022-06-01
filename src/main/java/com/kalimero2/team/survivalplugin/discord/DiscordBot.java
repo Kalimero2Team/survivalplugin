@@ -23,17 +23,20 @@ public class DiscordBot extends ListenerAdapter {
     public DiscordTrustList discordTrustList;
     private final SurvivalPlugin plugin;
 
-    public DiscordBot(String token, SurvivalPlugin plugin) throws LoginException {
+    public DiscordBot(String token, SurvivalPlugin plugin) throws LoginException, InterruptedException {
         this.plugin = plugin;
         JDABuilder builder = JDABuilder.createDefault(token);
         builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE);
         builder.setBulkDeleteSplittingEnabled(false);
         builder.disableIntents(GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MESSAGE_TYPING);
-        builder.enableIntents(GatewayIntent.GUILD_MESSAGES);
+        builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS);
         builder.setLargeThreshold(50);
         builder.addEventListeners(this);
         builder.setActivity(Activity.playing("Minecraft"));
         jda = builder.build();
+
+        jda.awaitReady();
+
         discordTrustList = new DiscordTrustList(plugin, jda);
 
 
@@ -49,6 +52,7 @@ public class DiscordBot extends ListenerAdapter {
         }else{
             plugin.getLogger().severe("Could not find server with id " + serverId);
         }
+        jda.addEventListener(this);
 
     }
 

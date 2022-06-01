@@ -13,12 +13,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.requests.restaction.ChannelAction;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DiscordTrustList extends ListenerAdapter {
@@ -42,16 +40,6 @@ public class DiscordTrustList extends ListenerAdapter {
         whitelist_category = plugin.getConfig().getString("discord.whitelist_category");
         whitelist_add_channel_message = plugin.messageUtil.getString("message.discord.whitelist_add_channel");
 
-        String roleId = plugin.getConfig().getString("discord.role");
-        if(roleId == null){
-            plugin.getLogger().warning("no role id found in config");
-            return;
-        }
-        whitelist_role = jda.getRoleById(roleId);
-        if(whitelist_role == null){
-            plugin.getLogger().warning("role not found");
-            return;
-        }
         String serverId = plugin.getConfig().getString("discord.server");
         if(serverId == null){
             plugin.getLogger().warning("no server id found in config");
@@ -60,6 +48,16 @@ public class DiscordTrustList extends ListenerAdapter {
         guild = jda.getGuildById(serverId);
         if(guild == null){
             plugin.getLogger().warning("server not found");
+            return;
+        }
+        String roleId = plugin.getConfig().getString("discord.role");
+        if(roleId == null){
+            plugin.getLogger().warning("no role id found in config");
+            return;
+        }
+        whitelist_role = guild.getRoleById(roleId);
+        if(whitelist_role == null){
+            plugin.getLogger().warning("role not found");
             return;
         }
 

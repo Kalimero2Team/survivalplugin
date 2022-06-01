@@ -108,7 +108,7 @@ public final class SurvivalPlugin extends JavaPlugin {
                 this.discordBot = null;
             }
             this.discordBot = new DiscordBot(plugin.getConfig().getString("discord.token"), plugin);
-        } catch (LoginException exception) {
+        } catch (LoginException | InterruptedException exception) {
             exception.printStackTrace();
         }
     }

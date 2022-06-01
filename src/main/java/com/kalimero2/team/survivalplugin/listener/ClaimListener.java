@@ -468,21 +468,15 @@ public class ClaimListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR,ignoreCancelled = true)
     public void onChunkLoad(ChunkLoadEvent event){
         if(claimManager.isClaimed(event.getChunk())){
-            new BukkitRunnable(){
-                @Override
-                public void run() {
-                    UUID chunkOwner = claimManager.getOwner(event.getChunk());
-                    OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(chunkOwner);
-                    ExtraPlayerData extraPlayerData = claimManager.getExtraPlayerData(offlinePlayer);
-                    SerializableChunk serializableChunk = claimManager.getSerializableChunk(event.getChunk());
-                    if(!extraPlayerData.chunks.contains(serializableChunk)){
-                        plugin.getLogger().warning("Missing Claimed Chunk added to PlayerData. Chunk: "+serializableChunk.toString()+ " Chunk Owner: "+ offlinePlayer.getName());
-                        extraPlayerData.chunks.add(serializableChunk);
-                        claimManager.setExtraPlayerData(offlinePlayer, extraPlayerData);
-                    }
-                }
-            }.runTaskAsynchronously(plugin);
-
+            UUID chunkOwner = claimManager.getOwner(event.getChunk());
+            OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(chunkOwner);
+            ExtraPlayerData extraPlayerData = claimManager.getExtraPlayerData(offlinePlayer);
+            SerializableChunk serializableChunk = claimManager.getSerializableChunk(event.getChunk());
+            if(!extraPlayerData.chunks.contains(serializableChunk)){
+                plugin.getLogger().warning("Missing Claimed Chunk added to PlayerData. Chunk: "+serializableChunk.toString()+ " Chunk Owner: "+ offlinePlayer.getName());
+                extraPlayerData.chunks.add(serializableChunk);
+                claimManager.setExtraPlayerData(offlinePlayer, extraPlayerData);
+            }
         }
     }
 

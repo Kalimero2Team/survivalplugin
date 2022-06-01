@@ -11,10 +11,6 @@ mongodb:
 claim:
   max-claims: 5
 
-chunk:
-  entity:
-    limit: 50
-
 admin-roles: []
 vip-roles: []
 messages: "messages_en.yml"
